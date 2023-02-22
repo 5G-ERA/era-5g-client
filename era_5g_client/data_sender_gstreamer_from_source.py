@@ -5,6 +5,7 @@ import cv2
 from era_5g_client.data_sender_gstreamer import DataSenderGStreamer
 
 
+# TODO should have common base with DataSenderGStreamerFromFile
 class DataSenderGStreamerFromSource(Thread):
     """Class which setups gstreamer connection to the NetApp and sends the data
     from the gstreamer source."""

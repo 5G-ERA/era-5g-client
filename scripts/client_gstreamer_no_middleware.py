@@ -1,18 +1,21 @@
-import traceback
-import signal
 import os
+import signal
+import traceback
+from threading import Thread
+from types import FrameType
+from typing import Optional
 
-from era_5g_client.data_sender_gstreamer_from_source import DataSenderGStreamerFromSource
-from era_5g_client.data_sender_gstreamer_from_file import DataSenderGStreamerFromFile
 from era_5g_client.client_gstreamer import NetAppClientGstreamer
-from era_5g_client.client import FailedToConnect
+from era_5g_client.data_sender_gstreamer_from_file import DataSenderGStreamerFromFile
+from era_5g_client.data_sender_gstreamer_from_source import DataSenderGStreamerFromSource
+from era_5g_client.exceptions import FailedToConnect
 
 # Video from source flag
 FROM_SOURCE = False
 # ip address or hostname of the computer, where the netapp is deployed
 NETAPP_ADDRESS = os.getenv("NETAPP_ADDRESS", "127.0.0.1")
 # port of the netapp's server
-NETAPP_PORT = os.getenv("NETAPP_PORT", 5896)
+NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 # test video file
 TEST_VIDEO_FILE = os.getenv("TEST_VIDEO_FILE", "../../../../assets/2017_01_02_001021_s.mp4")
 
@@ -28,17 +31,15 @@ def get_results(results: str) -> None:
 
 
 def main() -> None:
-    """
-    Creates the client class and starts the data transfer
-    """
+    """Creates the client class and starts the data transfer."""
 
-    client = None
-    sender = None
+    client: Optional[NetAppClientGstreamer] = None
+    sender: Optional[Thread] = None
 
-    def signal_handler(sig, frame):
+    def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
         print(f"Terminating ({signal.Signals(sig).name})...")
         if sender is not None:
-            sender.stop()
+            sender.stop()  # type: ignore  # TODO ZM: lazy to fix that atm (classes should have common base)
         if client is not None:
             client.disconnect()
 
@@ -47,21 +48,28 @@ def main() -> None:
 
     try:
         # creates the NetApp client with gstreamer extension
-        client = NetAppClientGstreamer(None, None, None, None, True, get_results, False, False, NETAPP_ADDRESS,
-                                       NETAPP_PORT)
+        client = NetAppClientGstreamer("", "", "", "", True, get_results, False, False, NETAPP_ADDRESS, NETAPP_PORT)
+
+        assert client.netapp_host
+        assert client.gstreamer_port
+
         # register the client with the NetApp
         client.register()
         if FROM_SOURCE:
             # creates a data sender which will pass images to the NetApp either from webcam ...
-            data_src = f"v4l2src device=/dev/video0 ! video/x-raw, format=YUY2, width=640, height=480, " + \
-                       "pixel-aspect-ratio=1/1 ! videoconvert ! appsink"
-            sender = DataSenderGStreamerFromSource(client.netapp_host, client.gstreamer_port, data_src, 15, 640, 480,
-                                                   False, daemon=True)
+            data_src = (
+                "v4l2src device=/dev/video0 ! video/x-raw, format=YUY2, width=640, height=480, "
+                + "pixel-aspect-ratio=1/1 ! videoconvert ! appsink"
+            )
+            sender = DataSenderGStreamerFromSource(
+                client.netapp_host, client.gstreamer_port, data_src, 15, 640, 480, False, daemon=True
+            )
             sender.start()
         else:
             # or from file
-            sender = DataSenderGStreamerFromFile(client.netapp_host, client.gstreamer_port, TEST_VIDEO_FILE, 15,
-                                                 640, 480, daemon=True)
+            sender = DataSenderGStreamerFromFile(
+                client.netapp_host, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480, daemon=True
+            )
             sender.start()
 
         # waits infinitely
@@ -78,5 +86,5 @@ def main() -> None:
             client.disconnect()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

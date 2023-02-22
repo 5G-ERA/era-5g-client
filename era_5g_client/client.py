@@ -17,6 +17,13 @@ buffer: List[Tuple[np.ndarray, Optional[str]]] = []
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 
 
+"""
+TODO ZdenekM: I would divide this to
+    NetAppClientBase (without middleware),
+    NetAppClient (derived from the above, which will be using middleware)
+"""
+
+
 class NetAppClient:
     """Basic implementation of the NetApp client.
 

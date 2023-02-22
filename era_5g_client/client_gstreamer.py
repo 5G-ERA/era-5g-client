@@ -1,38 +1,91 @@
-import cv2
-import numpy as np
+from typing import Callable, Optional
+
+from requests import Response
+
+from era_5g_client.client import NetAppClient
+from era_5g_client.exceptions import FailedToConnect
 
 
-class DataSenderGStreamer:
-    """Class which setups gstreamer connection to the NetApp allowing to send
-    image frames using the OpenCV VideoWriter."""
+class NetAppClientGstreamer(NetAppClient):
+    """NetApp client which asks the NetApp for h264 stream setup."""
 
-    def __init__(self, host: str, port: int, fps: float, width: int, height: int, threads: int = 1):
+    def __init__(
+        self,
+        host: str,
+        user_id: str,
+        password: str,
+        task_id: str,
+        resource_lock: bool,
+        results_event: Callable,
+        use_middleware: bool = True,
+        wait_for_netapp: bool = True,
+        netapp_uri: Optional[str] = None,
+        netapp_port: Optional[int] = None,
+    ) -> None:
         """
         Constructor
         Args:
-            host (str): ip address or hostname of the NetApp interface
-            port (int): the port assigned for gstreamer communication
-            fps (float): the requested FPS of the h264 stream
-            threads (int): the number of threads to be used to encode the h264 stream.
-                Defaults to 1
+            host (str): The IP or hostname of the middleware
+            user_id (str): The middleware user's id
+            password (str): The middleware user's password
+            task_id (str): The ID of the NetApp to be deployed
+            resource_lock (bool): TBA
+            results_event (Callable): callback where results will arrive
+            use_middleware (bool, optional): Defines if the NetApp should be deployed by middleware.
+                If False, the netapp_uri and netapp_port need to be defined, otherwise,
+                they need to be left None. Defaults to True.
+            wait_for_netapp (bool, optional):
+            netapp_uri (str, optional): The URI of the NetApp interface. Defaults to None.
+            netapp_port (int, optional): The port of the NetApp interface. Defaults to None.
         """
 
-        self.host = host
-        self.port = port
-        self.fps = fps
-        self.threads = threads
-        self.width = width
-        self.height = height
-
-        # default pipeline for sending h264 encoded stream
-        # ultrafast and zero latency params for near real-time processing
-        gst_str_rtp = (
-            "appsrc ! videoconvert ! queue ! x264enc "
-            + "speed-preset=ultrafast  tune=zerolatency  byte-stream=true "
-            + f"threads={self.threads} key-int-max=15 intra-refresh=true ! h264parse ! "
-            + f"rtph264pay ! queue ! udpsink host={self.host} port={self.port}"
+        super().__init__(
+            host,
+            user_id,
+            password,
+            task_id,
+            resource_lock,
+            results_event,
+            use_middleware,
+            wait_for_netapp,
+            netapp_uri,
+            netapp_port,
         )
-        self.out = cv2.VideoWriter(gst_str_rtp, cv2.CAP_GSTREAMER, 0, fps, (width, height), True)
+        # holds the gstreamer port
+        self.gstreamer_port: Optional[int] = None
 
-    def send_image(self, frame: np.ndarray) -> None:
-        self.out.write(frame)
+    def register(self, args=None) -> Response:
+        """Calls the /register endpoint of the NetApp interface and if the
+        registration is successful, it sets up the websocket connection for
+        results retrieval.
+
+        Besides, it obtains the gstreamer port.
+        Args:
+            args (_type_, optional): optional parameters to be passed to
+                the NetApp, in the form of dict. Defaults to None.
+        Raises:
+            FailedToConnect: raised when connection failed or the server
+                responded with wrong data
+        Returns:
+            Response: response from the NetApp
+        """
+
+        if args is None:
+            merged_args = {"gstreamer": True}
+        else:
+            merged_args = {**args, **{"gstreamer": True}}
+        response = super().register(merged_args)
+
+        # checks whether the NetApp responded with any data
+        if len(response.content) > 0:
+            data = response.json()
+            # checks if gstreamer port was returned
+            if "port" in data:
+                self.gstreamer_port = data["port"]
+            else:
+                raise FailedToConnect(f"{response.status_code}: could not obtain the gstreamer port number")
+        else:
+            self.disconnect()
+            raise FailedToConnect(f"{response.status_code}: unknown error")
+
+        return response
