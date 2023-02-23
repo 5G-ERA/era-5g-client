@@ -1,3 +1,4 @@
+import logging
 import os
 import signal
 import traceback
@@ -17,12 +18,12 @@ NETAPP_ADDRESS = os.getenv("NETAPP_ADDRESS", "127.0.0.1")
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 # test video file
-TEST_VIDEO_FILE = os.getenv("TEST_VIDEO_FILE", "../../../../assets/2017_01_02_001021_s.mp4")
+TEST_VIDEO_FILE = os.getenv("TEST_VIDEO_FILE", "")
 
 
 def get_results(results: str) -> None:
-    """
-    Callback which process the results from the NetApp
+    """Callback which process the results from the NetApp.
+
     Args:
         results (str): The results in json format
     """
@@ -35,6 +36,8 @@ def main() -> None:
 
     client: Optional[NetAppClientGstreamer] = None
     sender: Optional[Thread] = None
+
+    logging.getLogger().setLevel(logging.INFO)
 
     def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
         print(f"Terminating ({signal.Signals(sig).name})...")
@@ -49,12 +52,11 @@ def main() -> None:
     try:
         # creates the NetApp client with gstreamer extension
         client = NetAppClientGstreamer("", "", "", "", True, get_results, False, False, NETAPP_ADDRESS, NETAPP_PORT)
-
+        # register the client with the NetApp
+        client.register()
         assert client.netapp_host
         assert client.gstreamer_port
 
-        # register the client with the NetApp
-        client.register()
         if FROM_SOURCE:
             # creates a data sender which will pass images to the NetApp either from webcam ...
             data_src = (

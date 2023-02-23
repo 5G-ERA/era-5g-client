@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional
 
 from requests import Response
 
@@ -22,8 +22,8 @@ class NetAppClientGstreamer(NetAppClient):
         netapp_uri: Optional[str] = None,
         netapp_port: Optional[int] = None,
     ) -> None:
-        """
-        Constructor
+        """Constructor.
+
         Args:
             host (str): The IP or hostname of the middleware
             user_id (str): The middleware user's id
@@ -54,14 +54,14 @@ class NetAppClientGstreamer(NetAppClient):
         # holds the gstreamer port
         self.gstreamer_port: Optional[int] = None
 
-    def register(self, args=None) -> Response:
+    def register(self, args: Optional[Dict] = None) -> Response:
         """Calls the /register endpoint of the NetApp interface and if the
         registration is successful, it sets up the websocket connection for
         results retrieval.
 
         Besides, it obtains the gstreamer port.
         Args:
-            args (_type_, optional): optional parameters to be passed to
+            args (Dict, optional): optional parameters to be passed to
                 the NetApp, in the form of dict. Defaults to None.
         Raises:
             FailedToConnect: raised when connection failed or the server

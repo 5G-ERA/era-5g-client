@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import math
 import os
@@ -29,7 +31,7 @@ NETAPP_ADDRESS = os.getenv("NETAPP_ADDRESS", "127.0.0.1")
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 # test video file
-TEST_VIDEO_FILE = os.getenv("TEST_VIDEO_FILE", "../../../../assets/2017_01_02_001021_s.mp4")
+TEST_VIDEO_FILE = os.getenv("TEST_VIDEO_FILE", "")
 
 
 class ResultsViewer(Thread):
@@ -100,6 +102,8 @@ def main() -> None:
 
     results_viewer = ResultsViewer(name="test_client_http_viewer", daemon=True)
     results_viewer.start()
+
+    logging.getLogger().setLevel(logging.INFO)
 
     client = None
     global stopped
