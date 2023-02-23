@@ -143,7 +143,7 @@ class NetAppClient:
             if not self.resource_checker:
                 raise NetAppNotReady("Not connected to the middleware.")
 
-            if not self.resource_checker.is_ready:
+            if not self.resource_checker.is_ready():
                 raise NetAppNotReady("Not ready.")
 
         response = self.s.get(self.build_netapp_api_endpoint("register"), params=args)
