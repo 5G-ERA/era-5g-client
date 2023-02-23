@@ -16,7 +16,6 @@ buffer: List[Tuple[np.ndarray, Optional[str]]] = []
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 
-
 """
 TODO ZdenekM: I would divide this to
     NetAppClientBase (without middleware),
@@ -44,7 +43,8 @@ class NetAppClient:
         netapp_uri: Optional[str] = None,
         netapp_port: Optional[int] = None,
     ) -> None:
-        """Constructor
+        """Constructor.
+
         Args:
             host (str): The IP or hostname of the middleware
             user_id (str): The middleware user's id
@@ -77,7 +77,7 @@ class NetAppClient:
         self.action_seq_ids: List[str] = []
 
         self.sio = socketio.Client()
-        self.s = requests.session()
+        self.session = requests.session()
         self.host = host.rstrip("/") if host is not None else None
         self.resource_lock = resource_lock
         self.netapp_host = netapp_uri
@@ -146,7 +146,9 @@ class NetAppClient:
             if not self.resource_checker.is_ready():
                 raise NetAppNotReady("Not ready.")
 
-        response = self.s.get(self.build_netapp_api_endpoint("register"), params=args)
+        response = self.session.post(
+            self.build_netapp_api_endpoint("register"), json=args, headers={"Content-Type": "application/json"}
+        )
 
         # checks whether the NetApp responded with any data
         if len(response.content) > 0:
@@ -173,8 +175,9 @@ class NetAppClient:
     def disconnect(self) -> None:
         """Calls the /unregister endpoint of the server and disconnects the
         WebSocket connection."""
+
         if self.netapp_host is not None and self.netapp_port is not None:
-            self.s.get(self.build_netapp_api_endpoint("unregister"))
+            self.session.post(self.build_netapp_api_endpoint("unregister"))
         self.sio.disconnect()
         if self.use_middleware:
             self.delete_all_resources()
@@ -187,6 +190,7 @@ class NetAppClient:
         Returns:
             _type_: complete URI to requested endpoint
         """
+
         return f"http://{self.host}/{path}"
 
     def build_netapp_api_endpoint(self, path: str) -> str:
@@ -197,6 +201,7 @@ class NetAppClient:
         Returns:
             _type_: complete URI to requested endpoint
         """
+
         return f"http://{self.netapp_host}:{self.netapp_port}/{path}"
 
     def wait(self) -> None:
@@ -223,6 +228,7 @@ class NetAppClient:
             batch_size (int, optional): if higher than one, the images are
             send in batches. Defaults to 1
         """
+
         assert batch_size >= 1
 
         _, img_encoded = cv2.imencode(".jpg", frame)
@@ -231,12 +237,15 @@ class NetAppClient:
             buffer.append((img_encoded, timestamp))
 
         if len(buffer) == batch_size:
-
             # TODO find out right type annotation
             files = [("files", (f"image{i + 1}", buffer[i][0], "image/jpeg")) for i in range(batch_size)]
 
             timestamps: List[Optional[str]] = [b[1] for b in buffer]
-            self.s.post(self.build_netapp_api_endpoint("image"), files=files, params={"timestamps[]": timestamps})  # type: ignore
+            self.session.post(
+                self.build_netapp_api_endpoint("image"),
+                files=files,  # type: ignore
+                params={"timestamps[]": timestamps},  # type: ignore
+            )
             buffer.clear()
 
     def wait_until_netapp_ready(self) -> None:
@@ -321,6 +330,6 @@ class NetAppClient:
         raise NotImplementedError  # TODO
 
     def gateway_log_off(self) -> None:
-        print("Middleware log out successful ")
+        print("Middleware log out successful")
         # TODO
         pass
