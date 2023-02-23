@@ -22,8 +22,8 @@ class DataSenderGStreamerFromSource(Thread):
         threads: int = 1,
         **kw,
     ) -> None:
-        """
-        Constructor
+        """Constructor.
+
         Args:
             ip (str): ip address or hostname of the NetApp interface
             port (int): the port assigned for gstreamer communication

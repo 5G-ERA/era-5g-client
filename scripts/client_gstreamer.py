@@ -1,3 +1,4 @@
+import logging
 import os
 import signal
 import traceback
@@ -21,7 +22,7 @@ MIDDLEWARE_PASSWORD = os.getenv("MIDDLEWARE_PASSWORD", "password")
 # middleware NetApp id (task id)
 MIDDLEWARE_TASK_ID = os.getenv("MIDDLEWARE_TASK_ID", "00000000-0000-0000-0000-000000000000")
 # test video file
-TEST_VIDEO_FILE = os.getenv("TEST_VIDEO_FILE", "../../../../assets/2017_01_02_001021_s.mp4")
+TEST_VIDEO_FILE = os.getenv("TEST_VIDEO_FILE", "")
 
 
 def get_results(results: str) -> None:
@@ -41,6 +42,8 @@ def main() -> None:
     client: Optional[NetAppClientGstreamer] = None
     sender: Optional[Thread] = None
 
+    logging.getLogger().setLevel(logging.INFO)
+
     def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
         print(f"Terminating ({signal.Signals(sig).name})...")
         if sender is not None:
@@ -56,12 +59,11 @@ def main() -> None:
         client = NetAppClientGstreamer(
             MIDDLEWARE_ADDRESS, MIDDLEWARE_USER, MIDDLEWARE_PASSWORD, MIDDLEWARE_TASK_ID, True, get_results, True, True
         )
-
+        # register the client with the NetApp
+        client.register()
         assert client.netapp_host
         assert client.gstreamer_port
 
-        # register the client with the NetApp
-        client.register()
         if FROM_SOURCE:
             # creates a data sender which will pass images to the NetApp either from webcam ...
             data_src = (

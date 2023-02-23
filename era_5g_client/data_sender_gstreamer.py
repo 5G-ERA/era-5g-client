@@ -7,8 +7,8 @@ class DataSenderGStreamer:
     image frames using the OpenCV VideoWriter."""
 
     def __init__(self, host: str, port: int, fps: float, width: int, height: int, threads: int = 1) -> None:
-        """
-        Constructor
+        """Constructor.
+
         Args:
             host (str): ip address or hostname of the NetApp interface
             port (int): the port assigned for gstreamer communication
@@ -33,6 +33,10 @@ class DataSenderGStreamer:
             + f"rtph264pay ! queue ! udpsink host={self.host} port={self.port}"
         )
         self.out = cv2.VideoWriter(gst_str_rtp, cv2.CAP_GSTREAMER, 0, fps, (width, height), True)
+        # TODO: How to check valid VideoWriter?
+        if not self.out.isOpened():
+            raise Exception("Cannot open VideoWriter pipeline")
 
     def send_image(self, frame: np.ndarray) -> None:
         self.out.write(frame)
+        # TODO: How to check valid write?
