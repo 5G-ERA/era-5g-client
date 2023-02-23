@@ -10,7 +10,7 @@
 //   ],
 //   "generated_with_requirements": [
 //     "numpy~=1.24.2",
-//     "opencv-contrib-python~=4.6.0.66",
+//     "opencv-python~=4.6.0.66",
 //     "python-socketio~=5.7.2",
 //     "requests~=2.28.2",
 //     "websocket-client~=1.5.1"
@@ -398,31 +398,31 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "243411366820ba73f185867d0d9f9b8d42296070068222d5e3e40ecdcbbb3b39",
-              "url": "https://files.pythonhosted.org/packages/32/83/fb966289ab9df2d3eaa1ad5b3ea40a37c6a8f9bc081740258056f1a18454/opencv_contrib_python-4.6.0.66-cp37-abi3-macosx_11_0_arm64.whl"
+              "hash": "6e32af22e3202748bd233ed8f538741876191863882eba44e332d1a34993165b",
+              "url": "https://files.pythonhosted.org/packages/c6/00/858e894a2127b3a1b5479812b1bd3669bca64175dff4fc7c778e0a6ee565/opencv_python-4.6.0.66-cp37-abi3-macosx_11_0_arm64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "695911db4079216ffa5c3683885ccdfaba3059d279f9b96c14f9b8ec05570820",
-              "url": "https://files.pythonhosted.org/packages/13/2d/e8580e089200a8fe84f9befca59ba2d4c92e174dc17dc37a4574ab113db0/opencv_contrib_python-4.6.0.66-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+              "hash": "5af8ba35a4fcb8913ffb86e92403e9a656a4bff4a645d196987468f0f8947875",
+              "url": "https://files.pythonhosted.org/packages/12/5d/1527327b9f7ea13bef31377f8bf399f03dc5f4f1c9f1fb69bc56b6e24cd4/opencv_python-4.6.0.66-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "658ee41d6026614c7d4398fe7144b181e543d011ea190a0b80ec7a7d74ac744d",
-              "url": "https://files.pythonhosted.org/packages/34/45/c8bc145b1541d1fbbf25d5494cd76453d9855971cfe571b9ad7e13cdb4c8/opencv_contrib_python-4.6.0.66-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+              "hash": "c5bfae41ad4031e66bb10ec4a0a2ffd3e514d092652781e8b1ac98d1b59f1158",
+              "url": "https://files.pythonhosted.org/packages/7a/1c/e57fe138615c29b8d1442009057dd420c58d4773cb16112e914c9e7b47d8/opencv-python-4.6.0.66.tar.gz"
             },
             {
               "algorithm": "sha256",
-              "hash": "1dcdd0c68ae8495668f8a3360f7da5a24bc490320f21fc819bf60e197bf5bd7e",
-              "url": "https://files.pythonhosted.org/packages/50/fd/30c8a797422a008c10e39dbdb5fa4e9eef3131a608c5688db4afa954ff7d/opencv_contrib_python-4.6.0.66-cp36-abi3-macosx_10_15_x86_64.whl"
+              "hash": "dbdc84a9b4ea2cbae33861652d25093944b9959279200b7ae0badd32439f74de",
+              "url": "https://files.pythonhosted.org/packages/af/bf/8d189a5c43460f6b5c8eb81ead8732e94b9f73ef8d9abba9e8f5a61a6531/opencv_python-4.6.0.66-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "256efeb263999f3fb2427095392c1cb442d655508cd0a42864a383d55f3e6d43",
-              "url": "https://files.pythonhosted.org/packages/61/60/9eb2073c067ccdce10716498618644b4565e831910226ae568ab9e6dddcf/opencv-contrib-python-4.6.0.66.tar.gz"
+              "hash": "e6e448b62afc95c5b58f97e87ef84699e6607fe5c58730a03301c52496005cae",
+              "url": "https://files.pythonhosted.org/packages/bc/71/4575227302db0b95bbf635dd87f2c58339f84c6e63ade1afc7d332414da2/opencv_python-4.6.0.66-cp36-abi3-macosx_10_15_x86_64.whl"
             }
           ],
-          "project_name": "opencv-contrib-python",
+          "project_name": "opencv-python",
           "requires_dists": [
             "numpy>=1.13.3; python_version < \"3.7\"",
             "numpy>=1.14.5; python_version >= \"3.7\"",
@@ -569,7 +569,7 @@
   "prefer_older_binary": false,
   "requirements": [
     "numpy~=1.24.2",
-    "opencv-contrib-python~=4.6.0.66",
+    "opencv-python~=4.6.0.66",
     "python-socketio~=5.7.2",
     "requests~=2.28.2",
     "websocket-client~=1.5.1"
