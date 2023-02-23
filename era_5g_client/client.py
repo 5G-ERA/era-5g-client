@@ -1,3 +1,4 @@
+import base64
 import os
 from collections.abc import Callable
 from typing import Any, Dict, List, Optional, Tuple
@@ -73,9 +74,6 @@ class NetAppClient:
         # if middleware is not used, the netapp_uri and port needs to be provided
         # assert not use_middleware and netapp_uri and netapp_port
 
-        self.num_steps = 0
-        self.action_seq_ids: List[str] = []
-
         self.sio = socketio.Client()
         self.session = requests.session()
         self.host = host.rstrip("/") if host is not None else None
@@ -87,7 +85,6 @@ class NetAppClient:
         self.sio.on("connect", self.on_connect_event, namespace="/results")
         self.sio.on("connect_error", self.on_connect_error, namespace="/results")
         self.session_cookie: Optional[str] = None
-        self.plan: Optional[Dict[str, Any]] = None
         self.action_plan_id: Optional[str] = None
         self.resource_checker: Optional[MiddlewareResourceChecker] = None
         self.user_id = user_id
@@ -95,21 +92,22 @@ class NetAppClient:
         self.task_id = task_id
         self.token: Optional[str] = None
         self.wait_for_netapp = wait_for_netapp
+        self.ws_data = False
         if self.use_middleware:
             self.connect_to_middleware()
 
     def connect_to_middleware(self) -> None:
 
-        if not self.action_plan_id:
-            raise FailedToConnect("Need plan id first...")
-
         try:
             # connect to the middleware
             self.token = self.gateway_login(self.user_id, self.password)
 
-            self.plan = self.gateway_get_plan(
+            self.action_plan_id = self.gateway_get_plan(
                 self.task_id, self.resource_lock
-            )  # Get the plan by sending the token and TaskId
+            )  # Get the plan_id by sending the token and task_id
+            if not self.action_plan_id:
+                raise FailedToConnect("Need plan id first...")
+        
             self.resource_checker = MiddlewareResourceChecker(
                 self.token,
                 self.action_plan_id,
@@ -124,14 +122,16 @@ class NetAppClient:
             print("Feedback: Got new plan successfully.")
         except Exception as ex:
             self.delete_all_resources()
-            raise FailedToConnect("Can't connect to middleware.") from ex
+            raise FailedToConnect(f"Can't connect to middleware: {ex}") from ex
 
-    def register(self, args: Optional[Dict] = None) -> Response:
+    def register(self, ws_data: Optional[bool] = False, args: Optional[Dict] = None) -> Response:
         """Calls the /register endpoint of the NetApp interface and if the
         registration is successful, it sets up the WebSocket connection for
         results retrieval.
 
         Args:
+            ws_data (bool): indicates if a separate websocket channel
+            for data transport should be set
             args (dict): optional parameters to be passed to
             the NetApp, in the form of dict. Defaults to None.
         Returns:
@@ -145,6 +145,8 @@ class NetAppClient:
 
             if not self.resource_checker.is_ready():
                 raise NetAppNotReady("Not ready.")
+            
+        self.ws_data = ws_data
 
         response = self.session.post(
             self.build_netapp_api_endpoint("register"), json=args, headers={"Content-Type": "application/json"}
@@ -163,12 +165,20 @@ class NetAppClient:
         self.session_cookie = response.cookies["session"]
 
         # creates the WebSocket connection
-        self.sio.connect(
-            self.build_netapp_api_endpoint(""),
-            namespaces=["/results"],
-            headers={"Cookie": f"session={self.session_cookie}"},
-            wait_timeout=10,
-        )
+        if ws_data:
+            self.sio.connect(self.build_netapp_api_endpoint(""), 
+                             namespaces=['/results', '/data'], 
+                             headers={'Cookie': f'session={self.session_cookie}'},
+                             wait_timeout=10,
+            )
+        else:
+            self.sio.connect(self.build_netapp_api_endpoint(""),
+                             namespaces=["/results"],
+                             headers={"Cookie": f"session={self.session_cookie}"},
+                             wait_timeout=10,
+            )
+
+        
 
         return response
 
@@ -217,15 +227,15 @@ class NetAppClient:
         print(f"Connection error: {data}")
         # self.disconnect()
 
-    def send_image(self, frame: np.ndarray, timestamp: Optional[str] = None, batch_size: int = 1) -> None:
-        """Encodes the received image frame to the jpg format and sends it over
+    def send_image_http(self, frame: np.ndarray, timestamp: Optional[str] = None, batch_size: int = 1) -> None:
+        """Encodes the image frame to the jpg format and sends it over
         the HTTP, to the /image endpoint.
 
         Args:
             frame (np.ndarray): image frame
-            timestamp (str, optional): frame timestamp The timestamp format
+            timestamp (str, optional): Frame timestamp The timestamp format
             is defined by the NetApp. Defaults to None.
-            batch_size (int, optional): if higher than one, the images are
+            batch_size (int, optional): If higher than one, the images are
             send in batches. Defaults to 1
         """
 
@@ -248,7 +258,41 @@ class NetAppClient:
             )
             buffer.clear()
 
+    def send_image_ws(self, frame: np.ndarray, timestamp: Optional[str] = None):
+        """
+        Encodes the image frame to the jpg format and sends it over
+        the websocket, to the /data namespace.
+
+        Args:
+            frame (np.ndarray): Image frame
+            timestamp (Optional[str], optional): Frame timestamp The timestamp format
+            is defined by the NetApp. Defaults to None.
+        """
+        assert(self.ws_data)
+            
+        _, img_encoded = cv2.imencode('.jpg', frame)
+        self.sio.emit('image', {
+            "timestamp": timestamp,
+            "frame": base64.b64encode(img_encoded)
+        }, "/data")
+
+    def send_json_ws(self, json: dict):
+        """
+        Sends netapp-specific json data
+
+        Args:
+            json (dict): Json data in the form of Python dictionary
+        """
+        assert(self.ws_data)
+        self.sio.emit("json", json, "/data")
+
     def wait_until_netapp_ready(self) -> None:
+        """
+        Blocking wait until the NetApp is running
+
+        Raises:
+            NetAppNotReady: _description_
+        """
         if not self.resource_checker:
             raise NetAppNotReady("Not connected to middleware.")
         self.resource_checker.wait_until_resource_ready()
@@ -278,7 +322,7 @@ class NetAppClient:
         except KeyError as e:
             raise FailedToConnect(f"Could not login to the middleware gateway, the response does not contain {e}")
 
-    def gateway_get_plan(self, taskid: str, resource_lock: bool) -> Dict[str, Any]:
+    def gateway_get_plan(self, taskid: str, resource_lock: bool) -> str:
         # Request plan
         try:
             print("Goal task is: " + str(taskid))
@@ -293,22 +337,12 @@ class NetAppClient:
                 raise FailedToConnect(f"response {response['statusCode']}: {response['message']}")
             # todo:             if "errors" in response:
             #                 raise FailedToConnect(str(response["errors"]))
-            action_sequence = response["ActionSequence"]
             # print(action_sequence)
-            self.action_plan_id = response["ActionPlanId"]
+            action_plan_id = response["ActionPlanId"]
             print("ActionPlanId ** is: " + str(self.action_plan_id))
-
-            self.num_steps = len(action_sequence)
-
-            # Iterate over all the actions within the action sequence and get their ids.
-            for x in range(0, self.num_steps):
-                Action_SequenceFullData = action_sequence[x]
-                print("Subaction task id: " + Action_SequenceFullData["Id"])
-                self.action_seq_ids.append(Action_SequenceFullData["Id"])
-
-            return response
+            return action_plan_id
         except KeyError as e:
-            raise FailedToConnect(f"Could not get the plan, the response does not contain {e}")
+            raise FailedToConnect(f"Could not get the plan: {e}")
 
     def delete_all_resources(self) -> None:
         if self.token is None or self.action_plan_id is None:

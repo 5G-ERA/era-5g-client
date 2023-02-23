@@ -58,11 +58,11 @@ def main() -> None:
     try:
         # creates the NetApp client with gstreamer extension
         client = NetAppClientGstreamer("", "", "", "", True, get_results, False, False, NETAPP_ADDRESS, NETAPP_PORT)
-        # register the client with the NetApp
-        client.register()
         assert client.netapp_host
         assert client.gstreamer_port
 
+        # register the client with the NetApp
+        client.register()
         if FROM_SOURCE:
             # creates a data sender which will pass images to the NetApp either from webcam ...
             data_src = (

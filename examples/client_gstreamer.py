@@ -65,11 +65,11 @@ def main() -> None:
         client = NetAppClientGstreamer(
             MIDDLEWARE_ADDRESS, MIDDLEWARE_USER, MIDDLEWARE_PASSWORD, MIDDLEWARE_TASK_ID, True, get_results, True, True
         )
-        # register the client with the NetApp
-        client.register()
         assert client.netapp_host
         assert client.gstreamer_port
 
+        # register the client with the NetApp
+        client.register()
         if FROM_SOURCE:
             # creates a data sender which will pass images to the NetApp either from webcam ...
             data_src = (
