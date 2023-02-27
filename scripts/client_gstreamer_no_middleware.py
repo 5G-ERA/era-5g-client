@@ -18,7 +18,9 @@ NETAPP_ADDRESS = os.getenv("NETAPP_ADDRESS", "127.0.0.1")
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 # test video file
-TEST_VIDEO_FILE = os.getenv("TEST_VIDEO_FILE", "")
+TEST_VIDEO_FILE = str(os.getenv("TEST_VIDEO_FILE"))
+if TEST_VIDEO_FILE is None:
+    raise Exception("Failed to run example, env variable TEST_VIDEO_FILE not set")
 
 
 def get_results(results: str) -> None:
