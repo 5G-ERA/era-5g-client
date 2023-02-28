@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64  # for decoding masks
 import logging
 import math
 import os
@@ -13,6 +14,7 @@ from typing import Any, Dict, Optional
 
 import cv2
 import numpy as np
+import pycocotools.mask as masks_util  # for decoding masks
 
 from era_5g_client.client import NetAppClient
 from era_5g_client.exceptions import FailedToConnect
@@ -23,6 +25,7 @@ stopped = False
 
 DEBUG_PRINT_SCORE = False  # useful for FPS detector
 DEBUG_PRINT_DELAY = False  # prints the delay between capturing image and receiving the results
+DEBUG_DRAW_MASKS = True  # draw segmentation masks (if provided by detector)
 
 # Video from source flag
 FROM_SOURCE = False
@@ -76,6 +79,14 @@ class ResultsViewer(Thread):
                             1,
                             cv2.LINE_AA,
                         )
+
+                        if "mask" in d and DEBUG_DRAW_MASKS:
+                            encoded_mask = d["mask"]
+                            encoded_mask["counts"] = base64.b64decode(encoded_mask["counts"])  # Base64 decode
+                            mask = masks_util.decode(encoded_mask).astype(bool)  # RLE decode
+                            color_mask = np.random.randint(0, 256, (1, 3), dtype=np.uint8)
+                            frame[mask] = frame[mask] * 0.5 + color_mask * 0.5
+
                     try:
                         cv2.imshow("Results", frame)
                         cv2.waitKey(1)
