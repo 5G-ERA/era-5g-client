@@ -12,7 +12,7 @@ from era_5g_client.data_sender_gstreamer_from_source import DataSenderGStreamerF
 from era_5g_client.exceptions import FailedToConnect
 
 # Video from source flag
-FROM_SOURCE = os.getenv("FROM_SOURCE", False)
+FROM_SOURCE = os.getenv("FROM_SOURCE", "").lower() in ("true", "1")
 # ip address or hostname of the middleware server
 MIDDLEWARE_ADDRESS = os.getenv("MIDDLEWARE_ADDRESS", "127.0.0.1")
 # middleware user
@@ -25,7 +25,10 @@ MIDDLEWARE_TASK_ID = os.getenv("MIDDLEWARE_TASK_ID", "00000000-0000-0000-0000-00
 try:
     TEST_VIDEO_FILE = os.environ["TEST_VIDEO_FILE"]
 except KeyError as e:
-    raise Exception(f"Failed to run example, env variable {e} not set or empty.")
+    raise Exception(f"Failed to run example, env variable {e} not set.")
+
+if not os.path.isfile(TEST_VIDEO_FILE):
+    raise Exception("TEST_VIDEO_FILE does not contain valid path to a file.")
 
 
 def get_results(results: str) -> None:

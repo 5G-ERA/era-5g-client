@@ -34,7 +34,10 @@ NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 try:
     TEST_VIDEO_FILE = os.environ["TEST_VIDEO_FILE"]
 except KeyError as e:
-    raise Exception(f"Failed to run example, env variable {e} not set or empty.")
+    raise Exception(f"Failed to run example, env variable {e} not set.")
+
+if not os.path.isfile(TEST_VIDEO_FILE):
+    raise Exception("TEST_VIDEO_FILE does not contain valid path to a file.")
 
 
 class ResultsViewer(Thread):

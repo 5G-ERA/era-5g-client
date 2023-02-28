@@ -6,7 +6,7 @@ two classes for sending data using the h264 stream are presented.
 
 ## Reference implementation
 
-The reference implementations of the NetApp client is provided in the files scripts/client_*.py.
+The reference implementations of the NetApp client is provided in the files examples/client_*.py.
 
 ## Installation
 
@@ -24,7 +24,7 @@ System environment variables can be set, e.g.:
 ```
 # Use video file
 export FROM_SOURCE=False
-export TEST_VIDEO_FILE=../../../../assets/2017_01_02_001021_s.mp4
+export TEST_VIDEO_FILE=whatever_video.mp4
 ```
 or
 ```
@@ -32,7 +32,7 @@ or
 export FROM_SOURCE=True
 ```
 
-### Using middleware and gstreamer (scripts/client_gstreamer.py)
+### Using middleware and gstreamer (examples/client_gstreamer.py)
 
 The first example uses middleware to deploy the NetApp and to handle its life cycle. 
 Therefore, the NetApp needs to be uploaded to the accessible docker repository 
@@ -58,7 +58,7 @@ The user and password could be registered with the **/register** endpoint on the
 python3 client_gstreamer.py
 ```
 
-### Avoiding middleware, using gstreamer transport (scripts/client_gstreamer_no_middleware.py)
+### Avoiding middleware, using gstreamer transport (examples/client_gstreamer_no_middleware.py)
 
 For local testing, the middleware could be avoided, so the NetApp needs to be started manually. 
 Basic configuration needs to be provided:
@@ -76,7 +76,7 @@ export NETAPP_PORT=5897
 python3 client_gstreamer_no_middleware.py
 ```
 
-### Avoiding middleware, using http transport (scripts/client_gstreamer_no_middleware.py)
+### Avoiding middleware, using http transport (examples/client_gstreamer_no_middleware.py)
 
 The config is the same as in the previous case, but instead of GStreamer, the images are sent to 
 the REST endpoint of the NetApp, so the timestamps are preserved and the results could be drawn 
