@@ -12,23 +12,32 @@ from era_5g_client.data_sender_gstreamer_from_source import DataSenderGStreamerF
 from era_5g_client.exceptions import FailedToConnect
 
 # Video from source flag
-FROM_SOURCE = False
-# ip address or hostname of the computer, where the netapp is deployed
-NETAPP_ADDRESS = os.getenv("NETAPP_ADDRESS", "127.0.0.1")
-# port of the netapp's server
-NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
+FROM_SOURCE = os.getenv("FROM_SOURCE", "").lower() in ("true", "1")
+# ip address or hostname of the middleware server
+MIDDLEWARE_ADDRESS = os.getenv("MIDDLEWARE_ADDRESS", "127.0.0.1")
+# middleware user
+MIDDLEWARE_USER = os.getenv("MIDDLEWARE_USER", "00000000-0000-0000-0000-000000000000")
+# middleware password
+MIDDLEWARE_PASSWORD = os.getenv("MIDDLEWARE_PASSWORD", "password")
+# middleware NetApp id (task id)
+MIDDLEWARE_TASK_ID = os.getenv("MIDDLEWARE_TASK_ID", "00000000-0000-0000-0000-000000000000")
 # test video file
-TEST_VIDEO_FILE = str(os.getenv("TEST_VIDEO_FILE"))
-if TEST_VIDEO_FILE is None:
-    raise Exception("Failed to run example, env variable TEST_VIDEO_FILE not set")
+try:
+    TEST_VIDEO_FILE = os.environ["TEST_VIDEO_FILE"]
+except KeyError as e:
+    raise Exception(f"Failed to run example, env variable {e} not set.")
+
+if not os.path.isfile(TEST_VIDEO_FILE):
+    raise Exception("TEST_VIDEO_FILE does not contain valid path to a file.")
 
 
 def get_results(results: str) -> None:
-    """Callback which process the results from the NetApp.
-
+    """
+    Callback which process the results from the NetApp
     Args:
         results (str): The results in json format
     """
+
     print(results)
     pass
 
@@ -53,7 +62,9 @@ def main() -> None:
 
     try:
         # creates the NetApp client with gstreamer extension
-        client = NetAppClientGstreamer("", "", "", "", True, get_results, False, False, NETAPP_ADDRESS, NETAPP_PORT)
+        client = NetAppClientGstreamer(
+            MIDDLEWARE_ADDRESS, MIDDLEWARE_USER, MIDDLEWARE_PASSWORD, MIDDLEWARE_TASK_ID, True, get_results, True, True
+        )
         # register the client with the NetApp
         client.register()
         assert client.netapp_host
@@ -66,13 +77,13 @@ def main() -> None:
                 + "pixel-aspect-ratio=1/1 ! videoconvert ! appsink"
             )
             sender = DataSenderGStreamerFromSource(
-                client.netapp_host, client.gstreamer_port, data_src, 15, 640, 480, False, daemon=True
+                client.netapp_host, client.gstreamer_port, data_src, 15, 640, 480, False
             )
             sender.start()
         else:
             # or from file
             sender = DataSenderGStreamerFromFile(
-                client.netapp_host, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480, daemon=True
+                client.netapp_host, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480
             )
             sender.start()
 
