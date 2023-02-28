@@ -22,9 +22,10 @@ MIDDLEWARE_PASSWORD = os.getenv("MIDDLEWARE_PASSWORD", "password")
 # middleware NetApp id (task id)
 MIDDLEWARE_TASK_ID = os.getenv("MIDDLEWARE_TASK_ID", "00000000-0000-0000-0000-000000000000")
 # test video file
-TEST_VIDEO_FILE = str(os.getenv("TEST_VIDEO_FILE"))
-if TEST_VIDEO_FILE is None:
-    raise Exception("Failed to run example, env variable TEST_VIDEO_FILE not set")
+try:
+    TEST_VIDEO_FILE = os.environ["TEST_VIDEO_FILE"]
+except KeyError as e:
+    raise Exception(f"Failed to run example, env variable {e} not set or empty.")
 
 
 def get_results(results: str) -> None:
