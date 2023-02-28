@@ -55,7 +55,7 @@ The user and password could be registered with the **/register** endpoint on the
 (using Postman for example).
 
 ```bash
-python3 test_client_gstreamer.py
+python3 client_gstreamer.py
 ```
 
 ### Avoiding middleware, using gstreamer transport (scripts/client_gstreamer_no_middleware.py)
@@ -73,7 +73,7 @@ export NETAPP_PORT=5897
 ```
 
 ```bash
-python3 test_client_gstreamer_no_middleware.py
+python3 client_gstreamer_no_middleware.py
 ```
 
 ### Avoiding middleware, using http transport (scripts/client_gstreamer_no_middleware.py)
@@ -83,7 +83,7 @@ the REST endpoint of the NetApp, so the timestamps are preserved and the results
 into the images and shown. 
 
 ```bash
-python3 test_client_http.py
+python3 client_http.py
 ```
 
 ## Classes
