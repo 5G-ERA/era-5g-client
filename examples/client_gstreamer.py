@@ -21,14 +21,16 @@ MIDDLEWARE_USER = os.getenv("MIDDLEWARE_USER", "00000000-0000-0000-0000-00000000
 MIDDLEWARE_PASSWORD = os.getenv("MIDDLEWARE_PASSWORD", "password")
 # middleware NetApp id (task id)
 MIDDLEWARE_TASK_ID = os.getenv("MIDDLEWARE_TASK_ID", "00000000-0000-0000-0000-000000000000")
-# test video file
-try:
-    TEST_VIDEO_FILE = os.environ["TEST_VIDEO_FILE"]
-except KeyError as e:
-    raise Exception(f"Failed to run example, env variable {e} not set.")
 
-if not os.path.isfile(TEST_VIDEO_FILE):
-    raise Exception("TEST_VIDEO_FILE does not contain valid path to a file.")
+if not FROM_SOURCE:
+    # test video file
+    try:
+        TEST_VIDEO_FILE = os.environ["TEST_VIDEO_FILE"]
+    except KeyError as e:
+        raise Exception(f"Failed to run example, env variable {e} not set.")
+
+    if not os.path.isfile(TEST_VIDEO_FILE):
+        raise Exception("TEST_VIDEO_FILE does not contain valid path to a file.")
 
 
 def get_results(results: str) -> None:
@@ -51,7 +53,7 @@ def main() -> None:
     logging.getLogger().setLevel(logging.INFO)
 
     def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
-        print(f"Terminating ({signal.Signals(sig).name})...")
+        logging.info(f"Terminating ({signal.Signals(sig).name})...")
         if sender is not None:
             sender.stop()  # type: ignore  # TODO ZM: lazy to fix that atm (classes should have common base)
         if client is not None:
@@ -65,6 +67,7 @@ def main() -> None:
         client = NetAppClientGstreamer(
             MIDDLEWARE_ADDRESS, MIDDLEWARE_USER, MIDDLEWARE_PASSWORD, MIDDLEWARE_TASK_ID, True, get_results, True, True
         )
+
         if not client.netapp_host:
             logging.error("The middleware did not provide NetApp's address")
             client.disconnect()
@@ -89,6 +92,7 @@ def main() -> None:
             )
             sender.start()
         else:
+
             # or from file
             sender = DataSenderGStreamerFromFile(
                 client.netapp_host, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480
