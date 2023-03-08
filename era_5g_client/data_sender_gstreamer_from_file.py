@@ -12,8 +12,8 @@ class DataSenderGStreamerFromFile(Thread):
 
     def __init__(
         self,
-        ip: str,
-        port: int,
+        uri: str,
+        gstreamer_port: int,
         file_name: str,
         fps: float,
         width: int,
@@ -25,8 +25,8 @@ class DataSenderGStreamerFromFile(Thread):
         """Constructor.
 
         Args:
-            ip (str): ip address or hostname of the NetApp interface
-            port (int): the port assigned for gstreamer communication
+            uri (str): ip address or hostname of the NetApp interface
+            gstreamer_port (int): the port assigned for gstreamer communication
             fps (float): the requested FPS of the h264 stream
             file_name (str): the gstreamer source, e.g. v4l2src device=/dev/video0
             width (int): the width (in pixels) the video should be resized to (if resize=True) or the
@@ -42,7 +42,7 @@ class DataSenderGStreamerFromFile(Thread):
         super().__init__(**kw)
         self.stop_event = Event()
         # instantiate the base data sender object
-        self.data_sender_gstreamer = DataSenderGStreamer(ip, port, fps, width, height)
+        self.data_sender_gstreamer = DataSenderGStreamer(uri, gstreamer_port, fps, width, height)
 
         # creates the video capture and runs the thread
         self.cap = cv2.VideoCapture(file_name)

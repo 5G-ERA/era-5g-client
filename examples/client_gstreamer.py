@@ -6,9 +6,10 @@ from threading import Thread
 from types import FrameType
 from typing import Optional
 
-from era_5g_client.client_gstreamer import NetAppClientGstreamer
+from era_5g_client.client import NetAppClient, RunTaskMode
 from era_5g_client.data_sender_gstreamer_from_file import DataSenderGStreamerFromFile
 from era_5g_client.data_sender_gstreamer_from_source import DataSenderGStreamerFromSource
+from era_5g_client.dataclasses import MiddlewareInfo
 from era_5g_client.exceptions import FailedToConnect
 
 # Video from source flag
@@ -21,14 +22,18 @@ MIDDLEWARE_USER = os.getenv("MIDDLEWARE_USER", "00000000-0000-0000-0000-00000000
 MIDDLEWARE_PASSWORD = os.getenv("MIDDLEWARE_PASSWORD", "password")
 # middleware NetApp id (task id)
 MIDDLEWARE_TASK_ID = os.getenv("MIDDLEWARE_TASK_ID", "00000000-0000-0000-0000-000000000000")
-# test video file
-try:
-    TEST_VIDEO_FILE = os.environ["TEST_VIDEO_FILE"]
-except KeyError as e:
-    raise Exception(f"Failed to run example, env variable {e} not set.")
+# middleware robot id (robot id)
+MIDDLEWARE_ROBOT_ID = os.getenv("MIDDLEWARE_ROBOT_ID", "00000000-0000-0000-0000-000000000000")
 
-if not os.path.isfile(TEST_VIDEO_FILE):
-    raise Exception("TEST_VIDEO_FILE does not contain valid path to a file.")
+if not FROM_SOURCE:
+    # test video file
+    try:
+        TEST_VIDEO_FILE = os.environ["TEST_VIDEO_FILE"]
+    except KeyError as e:
+        raise Exception(f"Failed to run example, env variable {e} not set.")
+
+    if not os.path.isfile(TEST_VIDEO_FILE):
+        raise Exception("TEST_VIDEO_FILE does not contain valid path to a file.")
 
 
 def get_results(results: str) -> None:
@@ -45,13 +50,13 @@ def get_results(results: str) -> None:
 def main() -> None:
     """Creates the client class and starts the data transfer."""
 
-    client: Optional[NetAppClientGstreamer] = None
+    client: Optional[NetAppClient] = None
     sender: Optional[Thread] = None
 
     logging.getLogger().setLevel(logging.INFO)
 
     def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
-        print(f"Terminating ({signal.Signals(sig).name})...")
+        logging.info(f"Terminating ({signal.Signals(sig).name})...")
         if sender is not None:
             sender.stop()  # type: ignore  # TODO ZM: lazy to fix that atm (classes should have common base)
         if client is not None:
@@ -61,17 +66,17 @@ def main() -> None:
     signal.signal(signal.SIGINT, signal_handler)
 
     try:
-        # creates the NetApp client with gstreamer extension
-        client = NetAppClientGstreamer(
-            MIDDLEWARE_ADDRESS, MIDDLEWARE_USER, MIDDLEWARE_PASSWORD, MIDDLEWARE_TASK_ID, True, get_results, True, True
-        )
-        if not client.netapp_host:
+        # creates an instance of NetApp client with results callback
+        client = NetAppClient(get_results)
+        # authenticates with the middleware
+        client.connect_to_middleware(MiddlewareInfo(MIDDLEWARE_ADDRESS, MIDDLEWARE_USER, MIDDLEWARE_PASSWORD))
+        # run task, wait untill is ready and register with it
+        client.run_task(MIDDLEWARE_TASK_ID, MIDDLEWARE_ROBOT_ID, True, RunTaskMode.WAIT_AND_REGISTER, gstreamer=True)
+
+        if not client.netapp_location:
             logging.error("The middleware did not provide NetApp's address")
             client.disconnect()
             return
-
-        # register the client with the NetApp
-        client.register()
 
         if not client.gstreamer_port:
             logging.error("The middleware did not provide port for GStreamer")
@@ -85,13 +90,14 @@ def main() -> None:
                 + "pixel-aspect-ratio=1/1 ! videoconvert ! appsink"
             )
             sender = DataSenderGStreamerFromSource(
-                client.netapp_host, client.gstreamer_port, data_src, 15, 640, 480, False
+                client.netapp_location.uri, client.gstreamer_port, data_src, 15, 640, 480, False
             )
             sender.start()
         else:
+
             # or from file
             sender = DataSenderGStreamerFromFile(
-                client.netapp_host, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480
+                client.netapp_location.uri, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480
             )
             sender.start()
 

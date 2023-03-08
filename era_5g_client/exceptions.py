@@ -20,3 +20,7 @@ class FailedToObtainPlan(Era5gClientException):
 
 class NetAppNotReady(Era5gClientException):
     """Raised when an operation was requested on NetApp which is not ready."""
+
+
+class FailedToSendData(Era5gClientException):
+    """Raised when the data could not be send."""
