@@ -72,3 +72,5 @@ class DataSenderGStreamerFromSource(Thread):
                 self.data_sender_gstreamer.send_image(resized)
             else:
                 self.data_sender_gstreamer.send_image(frame)
+        self.cap.release()
+        self.data_sender_gstreamer.out.release()

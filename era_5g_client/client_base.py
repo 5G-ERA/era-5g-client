@@ -90,7 +90,7 @@ class NetAppClientBase:
         self.netapp_location = netapp_location
         self.ws_data = ws_data
 
-        merged_args = dict()
+        merged_args = args
         if gstreamer:
             # pass gstreamer flag for the NetApp
             if args is None:

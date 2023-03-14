@@ -3,12 +3,15 @@ from dataclasses import dataclass
 
 @dataclass
 class MiddlewareInfo:
-    uri: str
+    # The IP or hostname of the middleware
+    address: str
+    # The middleware user's id
     user_id: str
+    # The middleware user's password
     password: str
 
     def build_api_endpoint(self, path: str) -> str:
-        """Builds an API endpoint on the NetApp interface.
+        """Builds an API endpoint on the middleware.
 
         Args:
             path (str): endpoint path
@@ -16,12 +19,14 @@ class MiddlewareInfo:
             _type_: complete URI to requested endpoint
         """
 
-        return f"http://{self.uri}/{path}"
+        return f"http://{self.address}/{path}"
 
 
 @dataclass
 class NetAppLocation:
-    uri: str
+    # The IP or hostname of the NetApp interface
+    address: str
+    # The port of the NetApp interface
     port: int
 
     def build_api_endpoint(self, path: str) -> str:
@@ -33,4 +38,4 @@ class NetAppLocation:
             _type_: complete URI to requested endpoint
         """
 
-        return f"http://{self.uri}:{self.port}/{path}"
+        return f"http://{self.address}:{self.port}/{path}"
