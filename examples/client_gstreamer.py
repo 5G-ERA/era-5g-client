@@ -70,7 +70,7 @@ def main() -> None:
         client = NetAppClient(get_results)
         # authenticates with the middleware
         client.connect_to_middleware(MiddlewareInfo(MIDDLEWARE_ADDRESS, MIDDLEWARE_USER, MIDDLEWARE_PASSWORD))
-        # run task, wait untill is ready and register with it
+        # run task, wait until is ready and register with it
         client.run_task(MIDDLEWARE_TASK_ID, MIDDLEWARE_ROBOT_ID, True, RunTaskMode.WAIT_AND_REGISTER, gstreamer=True)
 
         if not client.netapp_location:
@@ -90,14 +90,13 @@ def main() -> None:
                 + "pixel-aspect-ratio=1/1 ! videoconvert ! appsink"
             )
             sender = DataSenderGStreamerFromSource(
-                client.netapp_location.uri, client.gstreamer_port, data_src, 15, 640, 480, False
+                client.netapp_location.address, client.gstreamer_port, data_src, 15, 640, 480, False
             )
             sender.start()
         else:
-
             # or from file
             sender = DataSenderGStreamerFromFile(
-                client.netapp_location.uri, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480
+                client.netapp_location.address, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480
             )
             sender.start()
 

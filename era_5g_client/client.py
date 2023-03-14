@@ -20,7 +20,7 @@ NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 
 
 class RunTaskMode(Enum):
-    # deploy the task but dont wait until it is ready, do not register with it
+    # deploy the task but don't wait until it is ready, do not register with it
     DO_NOTHING = 1
     # wait until the netapp is ready, do not register with it
     WAIT = 2
@@ -32,7 +32,7 @@ class NetAppClient(NetAppClientBase):
     """Extension of the NetAppClientBase class, which enable communication with
     the Middleware.
 
-    It allow to deploy the NetApp and check on the status of the NetApp
+    It allows to deploy the NetApp and check on the status of the NetApp
     """
 
     def __init__(
@@ -44,21 +44,10 @@ class NetAppClient(NetAppClientBase):
         """Constructor.
 
         Args:
-            host (str): The IP or hostname of the middleware
-            user_id (str): The middleware user's id
-            password (str): The middleware user's password
-            task_id (str): The ID of the NetApp to be deployed
-            resource_lock (bool): TBA
             results_event (Callable): callback where results will arrive
-            use_middleware (bool, optional): Defines if the NetApp should be deployed by middleware.
-                If False, the netapp_uri and netapp_port need to be defined, otherwise,
-                they need to be left None. Defaults to True.
-            wait_for_netapp (bool, optional):
-            netapp_uri (str, optional): The URI of the NetApp interface. Defaults to None.
-            netapp_port (int, optional): The port of the NetApp interface. Defaults to None.
-            image_error_event (Callable, optional): Callback which is emited when server
+            image_error_event (Callable, optional): Callback which is emitted when server
                 failed to process the incoming image.
-            json_error_event (Callable, optional): Callback which is emited when server
+            json_error_event (Callable, optional): Callback which is emitted when server
                 failed to process the incoming json data.
 
         Raises:
@@ -81,16 +70,14 @@ class NetAppClient(NetAppClientBase):
         calls.
 
         Args:
-            host (str): The IP address or hostname of the middleware
-            user_id (str): GUID of the middleware user
-            password (str): The password of the middleware user
+            middleware_info (MiddlewareInfo): Middleware info, i.e. dataclass with address, user's id and password
 
         Raises:
             FailedToConnect: Raised when the authentication with the
                 middleware failed
         """
         self.middleware_info = middleware_info
-        self.middleware_info.uri = self.middleware_info.uri.rstrip("/")
+        self.middleware_info.address = self.middleware_info.address.rstrip("/")
         try:
             # connect to the middleware
             self.token = self.gateway_login(self.middleware_info.user_id, self.middleware_info.password)
@@ -148,7 +135,7 @@ class NetAppClient(NetAppClientBase):
             self.resource_checker.start()
             if mode in [RunTaskMode.WAIT, RunTaskMode.WAIT_AND_REGISTER]:
                 self.wait_until_netapp_ready()
-                self.load_netapp_uri()
+                self.load_netapp_address()
                 if not self.netapp_location:
                     raise FailedToConnect("Failed to obtain NetApp URI or port")
                 if mode == RunTaskMode.WAIT_AND_REGISTER:
@@ -212,17 +199,19 @@ class NetAppClient(NetAppClientBase):
             raise FailedToConnect("Not connected to middleware.")
         self.resource_checker.wait_until_resource_ready()
 
-    def load_netapp_uri(self) -> None:
+    def load_netapp_address(self) -> None:
         if not (self.resource_checker and self.resource_checker.is_ready()):
             raise NetAppNotReady
         self.netapp_location = NetAppLocation(str(self.resource_checker.url), NETAPP_PORT)
 
-    def gateway_login(self, id: str, password: str) -> str:
+    def gateway_login(self, user_id: str, password: str) -> str:
         assert self.middleware_info
         print("Trying to log into the middleware")
         # Request Login
         try:
-            r = requests.post(self.middleware_info.build_api_endpoint("Login"), json={"Id": id, "Password": password})
+            r = requests.post(
+                self.middleware_info.build_api_endpoint("Login"), json={"Id": user_id, "Password": password}
+            )
             response = r.json()
             if "errors" in response:
                 raise FailedToConnect(str(response["errors"]))

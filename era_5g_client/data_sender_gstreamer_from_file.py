@@ -27,8 +27,8 @@ class DataSenderGStreamerFromFile(Thread):
         Args:
             uri (str): ip address or hostname of the NetApp interface
             gstreamer_port (int): the port assigned for gstreamer communication
-            fps (float): the requested FPS of the h264 stream
             file_name (str): the gstreamer source, e.g. v4l2src device=/dev/video0
+            fps (float): the requested FPS of the h264 stream
             width (int): the width (in pixels) the video should be resized to (if resize=True) or the
                 actual width of the video (if resize=False)
             height (int): the height (in pixels) the video should be resized to (if resize=True) or the
