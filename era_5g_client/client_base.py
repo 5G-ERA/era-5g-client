@@ -59,6 +59,8 @@ class NetAppClientBase:
         # holds the gstreamer port
         self.gstreamer_port: Optional[int] = None
         self._buffer: List[Tuple[np.ndarray, Optional[str]]] = []
+        self._image_error_event = image_error_event
+        self._json_error_event = json_error_event
 
     def register(
         self,
@@ -217,8 +219,25 @@ class NetAppClientBase:
         _, img_encoded = cv2.imencode(".jpg", frame)
         self._sio.emit("image", {"timestamp": timestamp, "frame": base64.b64encode(img_encoded)}, "/data")
 
-    def send_json_ws(self, json: dict):
-        """Sends netapp-specific json data.
+    def send_json_http(self, json: dict) -> None:
+        """Sends netapp-specific json data using the http request.
+
+        Args:
+            json (dict): Json data in the form of Python dictionary
+        """
+        if not self.netapp_location:
+            raise NetAppNotReady()
+        response = self._session.post(
+            self.netapp_location.build_api_endpoint("json"),
+            json=json,
+            headers={"Content-Type": "application/json"},
+        )
+
+        if not response.ok and self._json_error_event:
+            self._json_error_event(f"{response.reason} - {response.text}")
+
+    def send_json_ws(self, json: dict) -> None:
+        """Sends netapp-specific json data using the websockets.
 
         Args:
             json (dict): Json data in the form of Python dictionary
