@@ -1,7 +1,7 @@
 import base64
 import os
 from collections.abc import Callable
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -48,7 +48,7 @@ class NetAppClientBase:
 
         self._sio = socketio.Client()
         self._session = requests.session()
-        self.netapp_location: Optional[NetAppLocation] = None
+        self.netapp_location: Union[NetAppLocation, None] = None
         self._sio.on("message", results_event, namespace="/results")
         self._sio.on("connect", self.on_connect_event, namespace="/results")
         self._sio.on("image_error", image_error_event, namespace="/data")
@@ -86,7 +86,7 @@ class NetAppClientBase:
         Returns:
             Response: response from the NetApp.
         """
-
+        # TODO: check if gstreamer and ws_data are not enabled at the same time
         self.netapp_location = netapp_location
         self.ws_data = ws_data
 

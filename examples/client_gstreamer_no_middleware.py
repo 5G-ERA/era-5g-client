@@ -1,18 +1,16 @@
 import logging
 import os
 import signal
-import time
 import traceback
+from threading import Thread
 from types import FrameType
 from typing import Any, Dict, Optional
 
-import cv2
-
 from era_5g_client.client_base import NetAppClientBase
+from era_5g_client.data_sender_gstreamer_from_file import DataSenderGStreamerFromFile
+from era_5g_client.data_sender_gstreamer_from_source import DataSenderGStreamerFromSource
 from era_5g_client.dataclasses import NetAppLocation
 from era_5g_client.exceptions import FailedToConnect
-
-stopped = False
 
 # Video from source flag
 FROM_SOURCE = os.getenv("FROM_SOURCE", "").lower() in ("true", "1")
@@ -45,16 +43,17 @@ def get_results(results: Dict[str, Any]) -> None:
 def main() -> None:
     """Creates the client class and starts the data transfer."""
 
+    client: Optional[NetAppClientBase] = None
+    sender: Optional[Thread] = None
+
     logging.getLogger().setLevel(logging.INFO)
 
-    client = None
-    global stopped
-    stopped = False
-
     def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
-        global stopped
-        stopped = True
-        print(f"Terminating ({signal.Signals(sig).name})...")
+        logging.info(f"Terminating ({signal.Signals(sig).name})...")
+        if sender is not None:
+            sender.stop()  # type: ignore  # TODO ZM: lazy to fix that atm (classes should have common base)
+        if client is not None:
+            client.disconnect()
 
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -63,28 +62,28 @@ def main() -> None:
         # creates an instance of NetApp client with results callback
         client = NetAppClientBase(get_results)
         # register with an ad-hoc deployed NetApp
-        client.register(NetAppLocation(NETAPP_ADDRESS, NETAPP_PORT), ws_data=True)
+        client.register(NetAppLocation(NETAPP_ADDRESS, NETAPP_PORT), gstreamer=True)
+
+        if not client.gstreamer_port:
+            logging.error("Missing port for GStreamer")
+            client.disconnect()
+            return
 
         if FROM_SOURCE:
-            # creates a video capture to pass images to the NetApp either from webcam ...
-            cap = cv2.VideoCapture(0)
-            if not cap.isOpened():
-                raise Exception("Cannot open camera")
+            # creates a data sender which will pass images to the NetApp either from webcam ...
+            data_src = (
+                "v4l2src device=/dev/video0 ! video/x-raw, format=YUY2, width=640, height=480, "
+                + "pixel-aspect-ratio=1/1 ! videoconvert ! appsink"
+            )
+            sender = DataSenderGStreamerFromSource(NETAPP_ADDRESS, client.gstreamer_port, data_src, 15, 640, 480, False)
+            sender.start()
         else:
-            # or from video file
-            cap = cv2.VideoCapture(TEST_VIDEO_FILE)
-            if not cap.isOpened():
-                raise Exception("Cannot open video file")
+            # or from file
+            sender = DataSenderGStreamerFromFile(NETAPP_ADDRESS, client.gstreamer_port, TEST_VIDEO_FILE, 15, 640, 480)
+            sender.start()
 
-        while not stopped:
-            ret, frame = cap.read()
-            timestamp = time.time_ns()
-            if not ret:
-                break
-            resized = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
-            timestamp_str = str(timestamp)
-            client.send_image_ws(resized, timestamp_str)
-
+        # waits infinitely
+        client.wait()
     except FailedToConnect as ex:
         print(f"Failed to connect to server ({ex})")
     except KeyboardInterrupt:
