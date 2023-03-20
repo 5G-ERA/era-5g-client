@@ -19,7 +19,7 @@ python_distribution(
     sdist=True,
     provides=setup_py(
         name="era_5g_client",
-        version="0.1.0",
+        version="0.2.0",
         description="A client for 5G-ERA NetApps",
         author="Michal Kapinus",
         author_email="ikapinus@fit.vutbr.cz",
