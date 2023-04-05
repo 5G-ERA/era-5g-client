@@ -4,9 +4,10 @@ A client application for 5G-ERA NetApps. Contains the basic implementation of th
 and extended client for NetApps using the *gstreamer* for image stream transport. Besides, 
 two classes for sending data using the h264 stream are presented.
 
-## Reference implementation
+## Related Repositories
 
-The reference implementations of the NetApp client is provided in the files examples/client_*.py.
+- [era-5g-interface](https://github.com/5G-ERA/era-5g-interface) - Python interface (support classes) for Net Applications.
+- [Reference-NetApp](https://github.com/5G-ERA/Reference-NetApp) - reference NetApp implementation with MMCV detector.
 
 ## Installation
 
@@ -18,7 +19,7 @@ pip install era_5g_client
 
 ## Examples
 
-Three example clients are provided to test the NetApp.
+Three example clients (reference implementations) are provided to test the NetApp.
 
 System environment variables can be set, e.g.:
 ```
