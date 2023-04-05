@@ -26,16 +26,17 @@ class DataSenderGStreamer:
 
         # default pipeline for sending h264 encoded stream
         # ultrafast and zero latency params for near real-time processing
-        gst_str_rtp = (
-            "appsrc ! videoconvert ! queue ! x264enc "
-            + "speed-preset=ultrafast  tune=zerolatency  byte-stream=true "
-            + f"threads={self.threads} key-int-max=15 intra-refresh=true ! h264parse ! "
-            + f"rtph264pay ! queue ! udpsink host={self.host} port={self.gstreamer_port}"
+        pipeline = (
+            "appsrc is-live=true ! videoconvert ! "
+            "x264enc speed-preset=ultrafast tune=zerolatency byte-stream=true "
+            f"threads={self.threads} key-int-max=15 intra-refresh=true ! h264parse ! "
+            f"rtph264pay ! udpsink host={self.host} port={self.gstreamer_port}"
         )
-        self.out = cv2.VideoWriter(gst_str_rtp, cv2.CAP_GSTREAMER, 0, fps, (width, height), True)
+        self.out = cv2.VideoWriter(pipeline, cv2.CAP_GSTREAMER, 0, fps, (width, height), True)
         # TODO: How to check valid VideoWriter?
         if not self.out.isOpened():
             raise Exception("Cannot open VideoWriter pipeline")
+        # self.out.set(cv2.VIDEOWRITER_PROP_QUALITY, 10)
 
     def send_image(self, frame: np.ndarray) -> None:
         self.out.write(frame)
