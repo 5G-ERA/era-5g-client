@@ -129,24 +129,24 @@ class MiddlewareActionInfo:
 
 @dataclass
 class MiddlewarePlanInfo:
-    # The unique identifier of the plan
+    # The unique identifier of response
     id: str
-    # The unique identifier for the task
-    taskId: str
     # The name of the task
     name: str
-    # The status of the plan
-    status: str
-    # Check if the current plan is a replan.
-    isReplan: bool
-    # The last time the plan was modified
-    lastStatusChange: str
+    # Block semantic planning, use predefined action seq.
+    ReplanActionPlannerLocked: bool
+    # Do not modify placement
+    ResourceLock: str
+    # Priority of plan
+    TaskPriority: bool
+    # ActionPlan id
+    ActionPlanId: str
+    # The plan was fully revised
+    FullReplan: bool
+    # The plan was partially revised
+    PartialRePlan: bool
     # List of actions in the task
     actionSequence: list[MiddlewareActionInfo]
-    # robot id
-    robotId: str
-    # Time of task started.
-    taskStartedAt: str
 
     def build_api_endpoint(self, path: str) -> str:
         """Builds an API endpoint on the middleware.
