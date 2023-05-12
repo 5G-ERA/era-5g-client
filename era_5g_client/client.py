@@ -254,6 +254,35 @@ class NetAppClient(NetAppClientBase):
         except KeyError as e:
             raise FailedToConnect(f"Could not get the plan: {e}")
 
+
+    def gateway_get_full_plan(self, taskid: str, resource_lock: bool, robot_id: str) -> str:
+        assert self.middleware_info
+        # Request plan
+
+        try:
+            print("Goal task is: " + str(taskid))
+            hed = {"Authorization": f"Bearer {str(self.token)}"}
+            data = {
+                "TaskId": str(taskid),
+                "LockResourceReUse": resource_lock,
+                "RobotId": robot_id,
+            }
+            response = requests.post(
+                self.middleware_info.build_api_endpoint("Task/Plan"), json=data, headers=hed
+            ).json()
+            if not isinstance(response, dict):
+                raise FailedToConnect("Invalid response.")
+
+            if "statusCode" in response and (response["statusCode"] == 500 or response["statusCode"] == 400):
+                raise FailedToConnect(f"response {response['statusCode']}: {response['message']}")
+            # todo:             if "errors" in response:
+            #                 raise FailedToConnect(str(response["errors"]))
+            return response
+        except KeyError as e:
+            raise FailedToConnect(f"Could not get the full plan: {e}")
+            
+            
+            
     def delete_all_resources(self) -> None:
         if self.token is None or self.action_plan_id is None:
             return
