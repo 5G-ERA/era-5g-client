@@ -9,7 +9,7 @@ import requests
 from requests import HTTPError, Response
 
 from era_5g_client.client_base import NetAppClientBase
-from era_5g_client.dataclasses import MiddlewareInfo, NetAppLocation
+from era_5g_client.dataclasses import MiddlewareInfo, NetAppLocation, MiddlewarePlanInfo, MiddlewareActionInfo
 from era_5g_client.exceptions import FailedToConnect, NetAppNotReady
 from era_5g_client.middleware_resource_checker import MiddlewareResourceChecker
 
@@ -249,38 +249,12 @@ class NetAppClient(NetAppClientBase):
             # todo:             if "errors" in response:
             #                 raise FailedToConnect(str(response["errors"]))
             action_plan_id = str(response["ActionPlanId"])
+            return MiddlewarePlanInfo(response["id"], response["name"], response["ReplanActionPlannerLocked"], response["ResourceLock"], response["TaskPriority"],
+                                     response["ActionPlanId"], response["FullReplan"], response["PartialRePlan"], List(MiddlewareActionInfo()))
             print("ActionPlanId ** is: " + str(action_plan_id))
             return action_plan_id
         except KeyError as e:
             raise FailedToConnect(f"Could not get the plan: {e}")
-
-
-    def gateway_get_full_plan(self, taskid: str, resource_lock: bool, robot_id: str) -> str:
-        assert self.middleware_info
-        # Request plan
-
-        try:
-            print("Goal task is: " + str(taskid))
-            hed = {"Authorization": f"Bearer {str(self.token)}"}
-            data = {
-                "TaskId": str(taskid),
-                "LockResourceReUse": resource_lock,
-                "RobotId": robot_id,
-            }
-            response = requests.post(
-                self.middleware_info.build_api_endpoint("Task/Plan"), json=data, headers=hed
-            ).json()
-            if not isinstance(response, dict):
-                raise FailedToConnect("Invalid response.")
-
-            if "statusCode" in response and (response["statusCode"] == 500 or response["statusCode"] == 400):
-                raise FailedToConnect(f"response {response['statusCode']}: {response['message']}")
-            # todo:             if "errors" in response:
-            #                 raise FailedToConnect(str(response["errors"]))
-            return response
-        except KeyError as e:
-            raise FailedToConnect(f"Could not get the full plan: {e}")
-            
             
             
     def delete_all_resources(self) -> None:
