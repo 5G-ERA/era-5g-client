@@ -100,7 +100,7 @@ class MiddlewareActionInfo:
     # The unique identifier of the action
     id: str
     # The name of the action
-    action: str
+    name: str
     # tags of the action
     tags: list
     # Order of the action
