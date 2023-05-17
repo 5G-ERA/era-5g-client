@@ -9,7 +9,7 @@ import requests
 from requests import HTTPError, Response
 
 from era_5g_client.client_base import NetAppClientBase
-from era_5g_client.dataclasses import MiddlewareInfo, NetAppLocation, MiddlewarePlanInfo, MiddlewareActionInfo
+from era_5g_client.dataclasses import MiddlewareInfo, NetAppLocation, MiddlewarePlanInfo, MiddlewareActionInfo, MiddlewareRosTopicModel, MiddlewareServiceInfo
 from era_5g_client.exceptions import FailedToConnect, NetAppNotReady
 from era_5g_client.middleware_resource_checker import MiddlewareResourceChecker
 
@@ -118,9 +118,11 @@ class NetAppClient(NetAppClientBase):
         """
         assert self.middleware_info
         try:
-            self.action_plan_id = self.gateway_get_plan(
+            middlewarePlan = self.gateway_get_plan(
                 task_id, resource_lock, robot_id
             )  # Get the plan_id by sending the token and task_id
+            
+            self.action_plan_id = middlewarePlan["ActionPlanId"]
 
             if not self.action_plan_id:
                 raise FailedToConnect("Failed to obtain action plan id...")
@@ -225,7 +227,37 @@ class NetAppClient(NetAppClientBase):
             raise FailedToConnect(f"Could not login to the middleware gateway, status code: {e.response.status_code}")
         except KeyError as e:
             raise FailedToConnect(f"Could not login to the middleware gateway, the response does not contain {e}")
+            
+    def parser_middleware_plan_info(self, response: dict) -> MiddlewarePlanInfo:
+        actionSequenceData = response['ActionSequence']
+        action_list = []
+        for x in range(0,len(actionSequenceData)):
+            action = actionSequenceData[x]
+            service_list = []
+            serviceData = action["services"]
+            for y in range(0,len(serviceData)):
+                service = serviceData[y]
+                rosTopicsPub = []
+                rosTopicsSub = []
+                topicPubData = service["rosTopicsPub"]
+                topicSubData = service["rosTopicsSub"]
+                for z in range(0,len(topicPubData)):
+                    rosTopicsPub.append(MiddlewareRosTopicModel(topicPubData["name"],topicPubData["type"],topicPubData["description"],topicPubData["enabled"] ))
+                
+                for z in range(0,len(topicPubData)):
+                    rosTopicsSub.append(MiddlewareRosTopicModel(topicSubData["name"],topicSubData["type"],topicSubData["description"],topicSubData["enabled"] ))
 
+                service_list.append(MiddlewareServiceInfo(service["id"], service["name"],service["serviceInstanceId"],service["ServiceType"],service["isReusable"],service["desiredStatus"],
+                                      service["serviceUrl"],topicPubData,topicSubData, service["rosVersion"], service["rosDistro"], service["tags"],
+                                      service["instanceFamily"],service["successRate"],service["serviceStatus"], service["containerImage"], service["minimunRam"], service["minimumNumCores"],
+                                      service["onboardedTime"]))
+                
+            action_list.append(MiddlewareActionInfo(action["id"], action["name"], action["tags"], action["order"], action["placement"], action["placementType"], action["actionPriority"], action["actionStatus"],service_list ))
+
+        return MiddlewarePlanInfo(response["id"], response["name"], response["ReplanActionPlannerLocked"], response["ResourceLock"], response["TaskPriority"],
+                                     response["ActionPlanId"], response["FullReplan"], response["PartialRePlan"], action_list)
+
+    
     def gateway_get_plan(self, taskid: str, resource_lock: bool, robot_id: str) -> str:
         assert self.middleware_info
         # Request plan
@@ -248,11 +280,9 @@ class NetAppClient(NetAppClientBase):
                 raise FailedToConnect(f"response {response['statusCode']}: {response['message']}")
             # todo:             if "errors" in response:
             #                 raise FailedToConnect(str(response["errors"]))
-            action_plan_id = str(response["ActionPlanId"])
-            return MiddlewarePlanInfo(response["id"], response["name"], response["ReplanActionPlannerLocked"], response["ResourceLock"], response["TaskPriority"],
-                                     response["ActionPlanId"], response["FullReplan"], response["PartialRePlan"], List(MiddlewareActionInfo()))
-            print("ActionPlanId ** is: " + str(action_plan_id))
-            return action_plan_id
+            
+            return  self.parser_middleware_plan_info(response)
+           
         except KeyError as e:
             raise FailedToConnect(f"Could not get the plan: {e}")
             
