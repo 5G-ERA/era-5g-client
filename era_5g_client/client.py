@@ -232,18 +232,18 @@ class NetAppClient(NetAppClientBase):
         actionSequenceData = response['ActionSequence']
         action_list: list = []
         for action in actionSequenceData:
-            service_list = []
+            service_list: list = []
             serviceData = action["services"]
             for service in serviceData:
                 rosTopicsPub = []
                 rosTopicsSub = []
                 topicPubData = service["rosTopicsPub"]
                 topicSubData = service["rosTopicsSub"]
-                for z in range(0,len(topicPubData)):
-                    rosTopicsPub.append(MiddlewareRosTopicModel(topicPubData["name"],topicPubData["type"],topicPubData["description"],topicPubData["enabled"] ))
+                for topic in topicPubData:
+                    rosTopicsPub.append(MiddlewareRosTopicModel(topic["name"],topic["type"],topic["description"],topic["enabled"] ))
                 
-                for z in range(0,len(topicPubData)):
-                    rosTopicsSub.append(MiddlewareRosTopicModel(topicSubData["name"],topicSubData["type"],topicSubData["description"],topicSubData["enabled"] ))
+                for topic in topicPubData:
+                    rosTopicsSub.append(MiddlewareRosTopicModel(topic["name"],topic["type"],topic["description"],topic["enabled"] ))
 
                 service_list.append(MiddlewareServiceInfo(service["id"], service["name"],service["serviceInstanceId"],service["ServiceType"],service["isReusable"],service["desiredStatus"],
                                       service["serviceUrl"],topicPubData,topicSubData, service["rosVersion"], service["rosDistro"], service["tags"],
