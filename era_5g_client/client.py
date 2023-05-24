@@ -230,13 +230,11 @@ class NetAppClient(NetAppClientBase):
             
     def parser_middleware_plan_info(self, response: dict) -> MiddlewarePlanInfo:
         actionSequenceData = response['ActionSequence']
-        action_list = []
-        for x in range(0,len(actionSequenceData)):
-            action = actionSequenceData[x]
+        action_list: list = []
+        for action in actionSequenceData:
             service_list = []
             serviceData = action["services"]
-            for y in range(0,len(serviceData)):
-                service = serviceData[y]
+            for service in serviceData:
                 rosTopicsPub = []
                 rosTopicsSub = []
                 topicPubData = service["rosTopicsPub"]
