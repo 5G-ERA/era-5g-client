@@ -32,17 +32,6 @@ class MiddlewareRosTopicModel:
     # Is currently been used by the robot
     enabled: bool
 
-    def build_api_endpoint(self, path: str) -> str:
-        """Builds an API endpoint on the middleware.
-
-        Args:
-            path (str): endpoint path
-        Returns:
-            _type_: complete URI to requested endpoint
-        """
-
-        return f"http://{self.address}/{path}"
-
 @dataclass
 class MiddlewareServiceInfo:
     # The unique identifier of the service
@@ -84,17 +73,6 @@ class MiddlewareServiceInfo:
     # Onboarded time for network application.
     onboardedTime: str
 
-    def build_api_endpoint(self, path: str) -> str:
-        """Builds an API endpoint on the middleware.
-
-        Args:
-            path (str): endpoint path
-        Returns:
-            _type_: complete URI to requested endpoint
-        """
-
-        return f"http://{self.address}/{path}"
-
 @dataclass
 class MiddlewareActionInfo:
     # The unique identifier of the action
@@ -116,16 +94,6 @@ class MiddlewareActionInfo:
     # Services of the action
     services : list[MiddlewareServiceInfo]
 
-    def build_api_endpoint(self, path: str) -> str:
-        """Builds an API endpoint on the middleware.
-
-        Args:
-            path (str): endpoint path
-        Returns:
-            _type_: complete URI to requested endpoint
-        """
-
-        return f"http://{self.address}/{path}"
 
 @dataclass
 class MiddlewarePlanInfo:
@@ -147,17 +115,6 @@ class MiddlewarePlanInfo:
     PartialRePlan: bool
     # List of actions in the task
     actionSequence: list[MiddlewareActionInfo]
-
-    def build_api_endpoint(self, path: str) -> str:
-        """Builds an API endpoint on the middleware.
-
-        Args:
-            path (str): endpoint path
-        Returns:
-            _type_: complete URI to requested endpoint
-        """
-
-        return f"http://{self.address}/{path}"
 
 @dataclass
 class NetAppLocation:
