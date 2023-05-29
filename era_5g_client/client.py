@@ -40,15 +40,22 @@ class NetAppClient(NetAppClientBase):
         results_event: Callable,
         image_error_event: Optional[Callable] = None,
         json_error_event: Optional[Callable] = None,
+        control_cmd_event: Optional[Callable] = None,
+        control_cmd_error_event: Optional[Callable] = None,
     ) -> None:
         """Constructor.
 
         Args:
-            results_event (Callable): callback where results will arrive
+            results_event (Callable): Callback where results will arrive.
             image_error_event (Callable, optional): Callback which is emitted when server
                 failed to process the incoming image.
             json_error_event (Callable, optional): Callback which is emitted when server
                 failed to process the incoming json data.
+            control_cmd_event (Callable, optional): Callback for receiving data that are
+                sent as a result of performing a control command (e.g. NetApp state
+                obtained by get-state command).
+            control_cmd_error_event (Callable, optional): Callback which is emited when
+                server failed to process the incoming control command.
 
         Raises:
             FailedToConnect: When connection to the middleware could not be set or
@@ -57,7 +64,7 @@ class NetAppClient(NetAppClientBase):
                 the middleware
         """
 
-        super().__init__(results_event, image_error_event, json_error_event)
+        super().__init__(results_event, image_error_event, json_error_event, control_cmd_event, control_cmd_error_event)
 
         self.host: Optional[str] = None
         self.action_plan_id: Optional[str] = None
@@ -93,6 +100,7 @@ class NetAppClient(NetAppClientBase):
         mode: Optional[RunTaskMode] = RunTaskMode.WAIT_AND_REGISTER,
         gstreamer: Optional[bool] = False,
         ws_data: Optional[bool] = False,
+        use_control_cmds: Optional[bool] = False,
         args: Optional[Dict] = None,
     ) -> None:
         """Deploys the task with provided *task_id* using middleware and
@@ -139,7 +147,7 @@ class NetAppClient(NetAppClientBase):
                 if not self.netapp_location:
                     raise FailedToConnect("Failed to obtain NetApp URI or port")
                 if mode == RunTaskMode.WAIT_AND_REGISTER:
-                    self.register(self.netapp_location, gstreamer, ws_data, args)
+                    self.register(self.netapp_location, gstreamer, ws_data, use_control_cmds, args)
         except (FailedToConnect, NetAppNotReady) as ex:
             self.delete_all_resources()
             logging.error(f"Failed to run task: {ex}")
@@ -150,6 +158,7 @@ class NetAppClient(NetAppClientBase):
         netapp_location: NetAppLocation,
         gstreamer: Optional[bool] = False,
         ws_data: Optional[bool] = False,
+        use_control_cmds: Optional[bool] = False,
         args: Optional[Dict] = None,
     ) -> Response:
         """Calls the /register endpoint of the NetApp interface and if the
@@ -162,6 +171,9 @@ class NetAppClient(NetAppClientBase):
                 should be initialized for image transport. Defaults to False.
             ws_data (Optional[bool], optional): Indicates if a separate websocket channel
                 for data transport should be set. Defaults to False.
+            use_control_cmds (Optional[bool], optional): Indicates if a websocket channel
+                for control commands should be used. Control commands are indended for
+                changing the internal state of a stateful NetApp. Defaults to False.
             args (Optional[Dict], optional): NetApp-specific arguments. Defaults to None.
 
         Raises:
@@ -177,7 +189,7 @@ class NetAppClient(NetAppClientBase):
         if not self.resource_checker.is_ready():
             raise NetAppNotReady("Not ready.")
 
-        response = super().register(netapp_location, gstreamer, ws_data, args)
+        response = super().register(netapp_location, gstreamer, ws_data, use_control_cmds, args)
 
         return response
 

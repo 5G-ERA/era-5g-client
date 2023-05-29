@@ -1,6 +1,8 @@
 import base64
+import logging
 import os
 from collections.abc import Callable
+from dataclasses import asdict
 from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
@@ -28,16 +30,23 @@ class NetAppClientBase:
         results_event: Callable,
         image_error_event: Optional[Callable] = None,
         json_error_event: Optional[Callable] = None,
+        control_cmd_event: Optional[Callable] = None,
+        control_cmd_error_event: Optional[Callable] = None,
     ) -> None:
         """Constructor.
 
         Args:
 
-            results_event (Callable): callback where results will arrive
+            results_event (Callable): Callback where results will arrive.
             image_error_event (Callable, optional): Callback which is emited when server
                 failed to process the incoming image.
             json_error_event (Callable, optional): Callback which is emited when server
                 failed to process the incoming json data.
+            control_cmd_event (Callable, optional): Callback for receiving data that are
+                sent as a result of performing a control command (e.g. NetApp state
+                obtained by get-state command).
+            control_cmd_error_event (Callable, optional): Callback which is emited when
+                server failed to process the incoming control command.
 
         Raises:
             FailedToConnect: When connection to the middleware could not be set or
@@ -54,6 +63,8 @@ class NetAppClientBase:
         self._sio.on("image_error", image_error_event, namespace="/data")
         self._sio.on("json_error", json_error_event, namespace="/data")
         self._sio.on("connect_error", self.on_connect_error, namespace="/results")
+        self._sio.on("control_cmd_result", control_cmd_event, namespace="/control")
+        self._sio.on("control_cmd_error", control_cmd_error_event, namespace="/control")
         self._session_cookie: Optional[str] = None
         self.ws_data: Optional[bool] = False
         # holds the gstreamer port
@@ -61,12 +72,15 @@ class NetAppClientBase:
         self._buffer: List[Tuple[np.ndarray, Optional[str]]] = []
         self._image_error_event = image_error_event
         self._json_error_event = json_error_event
+        self._control_cmd_event = control_cmd_event
+        self._control_cmd_error_event = control_cmd_error_event
 
     def register(
         self,
         netapp_location: NetAppLocation,
         gstreamer: Optional[bool] = False,
         ws_data: Optional[bool] = False,
+        use_control_cmds: Optional[bool] = False,
         args: Optional[Dict] = None,
     ) -> Response:
         """Calls the /register endpoint of the NetApp interface and if the
@@ -79,6 +93,9 @@ class NetAppClientBase:
                 should be initialized for image transport. Defaults to False.
             ws_data (Optional[bool], optional): Indicates if a separate websocket channel
                 for data transport should be set. Defaults to False.
+            use_control_cmds (Optional[bool], optional): Indicates if a websocket channel
+                for control commands should be used. Control commands are indended for
+                changing the internal state of a stateful NetApp. Defaults to False.
             args (Optional[Dict], optional): Optional parameters to be passed to
             the NetApp, in the form of dict. Defaults to None.
 
@@ -88,9 +105,11 @@ class NetAppClientBase:
         Returns:
             Response: response from the NetApp.
         """
-        # TODO: check if gstreamer and ws_data are not enabled at the same time
+        if ws_data and gstreamer:
+            raise ValueError("GStreamer and ws_data cannot be enabled at the same time.")
         self.netapp_location = netapp_location
         self.ws_data = ws_data
+        self.use_control_cmds = use_control_cmds
 
         merged_args = args
         if gstreamer:
@@ -130,21 +149,18 @@ class NetAppClientBase:
         self._session_cookie = response.cookies["session"]
 
         # creates the WebSocket connection
+        namespaces_to_connect = ["/results"]
         if ws_data:
-            self._sio.connect(
-                self.netapp_location.build_api_endpoint(""),
-                namespaces=["/results", "/data"],
-                headers={"Cookie": f"session={self._session_cookie}"},
-                wait_timeout=10,
-            )
-            print("connect")
-        else:
-            self._sio.connect(
-                self.netapp_location.build_api_endpoint(""),
-                namespaces=["/results"],
-                headers={"Cookie": f"session={self._session_cookie}"},
-                wait_timeout=10,
-            )
+            namespaces_to_connect.append("/data")
+        if use_control_cmds:
+            namespaces_to_connect.append("/control")
+        self._sio.connect(
+            self.netapp_location.build_api_endpoint(""),
+            namespaces=namespaces_to_connect,
+            headers={"Cookie": f"session={self._session_cookie}"},
+            wait_timeout=10,
+        )
+        logging.info(f"Client connected to namespaces: {namespaces_to_connect}")
 
         return response
 
@@ -244,3 +260,13 @@ class NetAppClientBase:
         """
         assert self.ws_data
         self._sio.emit("json", json, "/data")
+
+    def send_control_command(self, control_command):
+        """Sends control command over the websocket.
+
+        Args:
+            control_command (ControlCommand): Control command to be sent.
+        """
+        assert self.use_control_cmds
+
+        self._sio.emit("command", asdict(control_command), "/control")
