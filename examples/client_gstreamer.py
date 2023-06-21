@@ -71,7 +71,7 @@ def main() -> None:
         # authenticates with the middleware
         client.connect_to_middleware(MiddlewareInfo(MIDDLEWARE_ADDRESS, MIDDLEWARE_USER, MIDDLEWARE_PASSWORD))
         # run task, wait until is ready and register with it
-        client.run_task(MIDDLEWARE_TASK_ID, MIDDLEWARE_ROBOT_ID, True, RunTaskMode.WAIT_AND_REGISTER, gstreamer=True)
+        client.run_task(MIDDLEWARE_TASK_ID, MIDDLEWARE_ROBOT_ID, True, RunTaskMode.WAIT_AND_REGISTER)
 
         if not client.netapp_location:
             logging.error("The middleware did not provide NetApp's address")

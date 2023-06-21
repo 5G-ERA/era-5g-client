@@ -7,12 +7,12 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
-import requests
 import socketio
-from requests import Response
+from socketio.exceptions import ConnectionError  # type: ignore
 
 from era_5g_client.dataclasses import NetAppLocation
-from era_5g_client.exceptions import FailedToConnect, FailedToSendData, NetAppNotReady
+from era_5g_client.exceptions import FailedToConnect
+from era_5g_interface.dataclasses.control_command import ControlCmdType, ControlCommand  # type: ignore
 
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
@@ -56,7 +56,6 @@ class NetAppClientBase:
         """
 
         self._sio = socketio.Client()
-        self._session = requests.session()
         self.netapp_location: Union[NetAppLocation, None] = None
         self._sio.on("message", results_event, namespace="/results")
         self._sio.on("connect", self.on_connect_event, namespace="/results")
@@ -66,7 +65,6 @@ class NetAppClientBase:
         self._sio.on("control_cmd_result", control_cmd_event, namespace="/control")
         self._sio.on("control_cmd_error", control_cmd_error_event, namespace="/control")
         self._session_cookie: Optional[str] = None
-        self.ws_data: Optional[bool] = False
         # holds the gstreamer port
         self.gstreamer_port: Optional[int] = None
         self._buffer: List[Tuple[np.ndarray, Optional[str]]] = []
@@ -78,11 +76,8 @@ class NetAppClientBase:
     def register(
         self,
         netapp_location: NetAppLocation,
-        gstreamer: Optional[bool] = False,
-        ws_data: Optional[bool] = False,
-        use_control_cmds: Optional[bool] = False,
         args: Optional[Dict] = None,
-    ) -> Response:
+    ) -> None:
         """Calls the /register endpoint of the NetApp interface and if the
         registration is successful, it sets up the WebSocket connection for
         results retrieval.
@@ -91,11 +86,6 @@ class NetAppClientBase:
             netapp_location (NetAppLocation): The URI and port of the NetApp interface.
             gstreamer (Optional[bool], optional): Indicates if a GStreamer pipeline
                 should be initialized for image transport. Defaults to False.
-            ws_data (Optional[bool], optional): Indicates if a separate websocket channel
-                for data transport should be set. Defaults to False.
-            use_control_cmds (Optional[bool], optional): Indicates if a websocket channel
-                for control commands should be used. Control commands are indended for
-                changing the internal state of a stateful NetApp. Defaults to False.
             args (Optional[Dict], optional): Optional parameters to be passed to
             the NetApp, in the form of dict. Defaults to None.
 
@@ -105,71 +95,25 @@ class NetAppClientBase:
         Returns:
             Response: response from the NetApp.
         """
-        if ws_data and gstreamer:
-            raise ValueError("GStreamer and ws_data cannot be enabled at the same time.")
+
         self.netapp_location = netapp_location
-        self.ws_data = ws_data
-        self.use_control_cmds = use_control_cmds
 
-        merged_args = args
-        if gstreamer:
-            # pass gstreamer flag for the NetApp
-            if args is None:
-                merged_args = {"gstreamer": True}
-            else:
-                merged_args = {**args, **{"gstreamer": True}}
-
-        response = self._session.post(
-            self.netapp_location.build_api_endpoint("register"),
-            json=merged_args,
-            headers={"Content-Type": "application/json"},
-        )
-
-        if response.ok:
-            # checks whether the NetApp responded with any data
-            if response.content:
-                try:
-                    data = response.json()
-                    if gstreamer:
-                        if "port" in data:
-                            self.gstreamer_port = data["port"]
-                        else:
-                            raise FailedToConnect(f"{response.status_code}: could not obtain the gstreamer port number")
-
-                except ValueError as ex:
-                    raise FailedToConnect(f"Decoding JSON has failed: {ex}, response: {response}")
-        else:
-            data = response.json()
-            # checks if an error was returned
-            if "error" in data:
-                raise FailedToConnect(f"{response.status_code}: {data['error']}")
-            else:
-                raise FailedToConnect(f"{response.status_code}: Unknown error")
-
-        self._session_cookie = response.cookies["session"]
-
-        # creates the WebSocket connection
-        namespaces_to_connect = ["/results"]
-        if ws_data:
-            namespaces_to_connect.append("/data")
-        if use_control_cmds:
-            namespaces_to_connect.append("/control")
-        self._sio.connect(
-            self.netapp_location.build_api_endpoint(""),
-            namespaces=namespaces_to_connect,
-            headers={"Cookie": f"session={self._session_cookie}"},
-            wait_timeout=10,
-        )
+        namespaces_to_connect = ["/data", "/control", "/results"]
+        try:
+            self._sio.connect(
+                self.netapp_location.build_api_endpoint(""),
+                namespaces=namespaces_to_connect,
+                wait_timeout=10,
+            )
+        except ConnectionError as ex:
+            raise FailedToConnect(ex)
         logging.info(f"Client connected to namespaces: {namespaces_to_connect}")
-
-        return response
+        # initialize the network application with desired parameters using the set_state command
+        control_cmd = ControlCommand(ControlCmdType.SET_STATE, clear_queue=True, data=args)
+        self.send_control_command(control_cmd)
 
     def disconnect(self) -> None:
-        """Calls the /unregister endpoint of the server and disconnects the
-        WebSocket connection."""
-
-        if self.netapp_location:
-            self._session.post(self.netapp_location.build_api_endpoint("unregister"))
+        """Disconnects the WebSocket connection."""
         self._sio.disconnect()
 
     def wait(self) -> None:
@@ -185,42 +129,6 @@ class NetAppClientBase:
         print(f"Connection error: {data}")
         # self.disconnect()
 
-    def send_image_http(self, frame: np.ndarray, timestamp: Optional[str] = None, batch_size: int = 1) -> None:
-        """Encodes the image frame to the jpg format and sends it over the
-        HTTP, to the /image endpoint.
-
-        Args:
-            frame (np.ndarray): image frame
-            timestamp (str, optional): Frame timestamp The timestamp format
-            is defined by the NetApp. Defaults to None.
-            batch_size (int, optional): If higher than one, the images are
-            send in batches. Defaults to 1
-        """
-
-        assert batch_size >= 1
-
-        if not self.netapp_location:
-            raise NetAppNotReady("The client does not know the netapp location")
-
-        _, img_encoded = cv2.imencode(".jpg", frame)
-
-        if len(self._buffer) < batch_size:
-            self._buffer.append((img_encoded, timestamp))
-
-        if len(self._buffer) == batch_size:
-            # TODO find out right type annotation
-            files = [("files", (f"image{i + 1}", self._buffer[i][0], "image/jpeg")) for i in range(batch_size)]
-
-            timestamps: List[Optional[str]] = [b[1] for b in self._buffer]
-            response = self._session.post(
-                self.netapp_location.build_api_endpoint("image"),
-                files=files,  # type: ignore
-                params={"timestamps[]": timestamps},  # type: ignore
-            )
-            if not response.ok:
-                raise FailedToSendData
-            self._buffer.clear()
-
     def send_image_ws(self, frame: np.ndarray, timestamp: Optional[str] = None):
         """Encodes the image frame to the jpg format and sends it over the
         websocket, to the /data namespace.
@@ -230,27 +138,9 @@ class NetAppClientBase:
             timestamp (Optional[str], optional): Frame timestamp The timestamp format
             is defined by the NetApp. Defaults to None.
         """
-        assert self.ws_data
-
         _, img_encoded = cv2.imencode(".jpg", frame)
-        self._sio.emit("image", {"timestamp": timestamp, "frame": base64.b64encode(img_encoded)}, "/data")
-
-    def send_json_http(self, json: dict) -> None:
-        """Sends netapp-specific json data using the http request.
-
-        Args:
-            json (dict): Json data in the form of Python dictionary
-        """
-        if not self.netapp_location:
-            raise NetAppNotReady()
-        response = self._session.post(
-            self.netapp_location.build_api_endpoint("json"),
-            json=json,
-            headers={"Content-Type": "application/json"},
-        )
-
-        if not response.ok and self._json_error_event:
-            self._json_error_event(f"{response.reason} - {response.text}")
+        f = base64.b64encode(img_encoded)
+        self._sio.emit("image", {"timestamp": timestamp, "frame": f}, "/data")
 
     def send_json_ws(self, json: dict) -> None:
         """Sends netapp-specific json data using the websockets.
@@ -258,8 +148,7 @@ class NetAppClientBase:
         Args:
             json (dict): Json data in the form of Python dictionary
         """
-        assert self.ws_data
-        self._sio.emit("json", json, "/data")
+        self._sio.call("json", json, "/data")
 
     def send_control_command(self, control_command):
         """Sends control command over the websocket.
@@ -267,6 +156,5 @@ class NetAppClientBase:
         Args:
             control_command (ControlCommand): Control command to be sent.
         """
-        assert self.use_control_cmds
 
         self._sio.emit("command", asdict(control_command), "/control")

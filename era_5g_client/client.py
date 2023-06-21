@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import requests
-from requests import HTTPError, Response
+from requests import HTTPError
 
 from era_5g_client.client_base import NetAppClientBase
 from era_5g_client.dataclasses import MiddlewareInfo, NetAppLocation
@@ -98,9 +98,6 @@ class NetAppClient(NetAppClientBase):
         robot_id: str,
         resource_lock: bool,
         mode: Optional[RunTaskMode] = RunTaskMode.WAIT_AND_REGISTER,
-        gstreamer: Optional[bool] = False,
-        ws_data: Optional[bool] = False,
-        use_control_cmds: Optional[bool] = False,
         args: Optional[Dict] = None,
     ) -> None:
         """Deploys the task with provided *task_id* using middleware and
@@ -147,7 +144,7 @@ class NetAppClient(NetAppClientBase):
                 if not self.netapp_location:
                     raise FailedToConnect("Failed to obtain NetApp URI or port")
                 if mode == RunTaskMode.WAIT_AND_REGISTER:
-                    self.register(self.netapp_location, gstreamer, ws_data, use_control_cmds, args)
+                    self.register(self.netapp_location, args)
         except (FailedToConnect, NetAppNotReady) as ex:
             self.delete_all_resources()
             logging.error(f"Failed to run task: {ex}")
@@ -156,11 +153,8 @@ class NetAppClient(NetAppClientBase):
     def register(
         self,
         netapp_location: NetAppLocation,
-        gstreamer: Optional[bool] = False,
-        ws_data: Optional[bool] = False,
-        use_control_cmds: Optional[bool] = False,
         args: Optional[Dict] = None,
-    ) -> Response:
+    ) -> None:
         """Calls the /register endpoint of the NetApp interface and if the
         registration is successful, it sets up the WebSocket connection for
         results retrieval.
@@ -189,9 +183,7 @@ class NetAppClient(NetAppClientBase):
         if not self.resource_checker.is_ready():
             raise NetAppNotReady("Not ready.")
 
-        response = super().register(netapp_location, gstreamer, ws_data, use_control_cmds, args)
-
-        return response
+        super().register(netapp_location, args)
 
     def disconnect(self) -> None:
         """Calls the /unregister endpoint of the server and disconnects the
