@@ -129,7 +129,7 @@ class NetAppClientBase:
         print(f"Connection error: {data}")
         # self.disconnect()
 
-    def send_image_ws(self, frame: np.ndarray, timestamp: Optional[str] = None):
+    def send_image_ws(self, frame: np.ndarray, timestamp: Optional[str] = None, metadata: Optional[str] = None):
         """Encodes the image frame to the jpg format and sends it over the
         websocket, to the /data namespace.
 
@@ -140,7 +140,10 @@ class NetAppClientBase:
         """
         _, img_encoded = cv2.imencode(".jpg", frame)
         f = base64.b64encode(img_encoded)
-        self._sio.emit("image", {"timestamp": timestamp, "frame": f}, "/data")
+        data = {"timestamp": timestamp, "frame": f}
+        if metadata:
+            data["metadata"] = metadata
+        self._sio.emit("image", data, "/data")
 
     def send_json_ws(self, json: dict) -> None:
         """Sends netapp-specific json data using the websockets.
