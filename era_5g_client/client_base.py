@@ -8,11 +8,11 @@ from typing import Dict, List, Optional, Tuple, Union
 import cv2
 import numpy as np
 import socketio
-from socketio.exceptions import ConnectionError  # type: ignore
+from socketio.exceptions import ConnectionError
 
 from era_5g_client.dataclasses import NetAppLocation
 from era_5g_client.exceptions import FailedToConnect
-from era_5g_interface.dataclasses.control_command import ControlCmdType, ControlCommand  # type: ignore
+from era_5g_interface.dataclasses.control_command import ControlCmdType, ControlCommand
 
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
@@ -145,7 +145,7 @@ class NetAppClientBase:
             data["metadata"] = metadata
         self._sio.emit("image", data, "/data")
 
-    def send_json_ws(self, json: dict) -> None:
+    def send_json_ws(self, json: Dict) -> None:
         """Sends netapp-specific json data using the websockets.
 
         Args:
