@@ -58,7 +58,6 @@ class MiddlewareResourceChecker(Thread):
             raise FailedToConnect("Could not get the resource status, revisit the log files for more details.")
 
     def wait_until_resource_ready(self, timeout: int = -1) -> None:
-
         while not self.stop_event.is_set():
             # if timeout < 0 and time.time() < timeout:
             #    raise TimeoutError

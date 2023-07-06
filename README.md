@@ -114,6 +114,7 @@ the NetApp.
 
 ## Contributing, development
 
+- The package is developed and tested with Python 3.8.
 - Any contribution should go through a pull request from your fork.
 - Before committing, please run locally:
   - `./pants fmt ::` - format all code according to our standard.

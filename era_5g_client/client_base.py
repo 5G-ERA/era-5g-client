@@ -108,6 +108,10 @@ class NetAppClientBase:
         except ConnectionError as ex:
             raise FailedToConnect(ex)
         logging.info(f"Client connected to namespaces: {namespaces_to_connect}")
+
+        if args is None:  # TODO would be probably better to handle in ControlCommand
+            args = {}
+
         # initialize the network application with desired parameters using the set_state command
         control_cmd = ControlCommand(ControlCmdType.SET_STATE, clear_queue=True, data=args)
         self.send_control_command(control_cmd)
