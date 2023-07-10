@@ -1,6 +1,7 @@
 import base64
 import logging
 import os
+import time
 from collections.abc import Callable
 from dataclasses import asdict
 from typing import Dict, Optional, Union
@@ -59,6 +60,7 @@ class NetAppClientBase:
             FailedToObtainPlan: When the plan was not successfully returned from
                 the middleware
         """
+
         self._sio = socketio.Client()
         self.netapp_location: Union[NetAppLocation, None] = None
         self._sio.on("message", results_event, namespace="/results")
@@ -79,6 +81,8 @@ class NetAppClientBase:
         self,
         netapp_location: NetAppLocation,
         args: Optional[Dict] = None,
+        wait_until_available: bool = False,
+        wait_timeout: int = -1,
     ) -> None:
         """Calls the /register endpoint of the NetApp interface and if the
         registration is successful, it sets up the WebSocket connection for
@@ -88,6 +92,11 @@ class NetAppClientBase:
             netapp_location (NetAppLocation): The URI and port of the NetApp interface.
             args (Optional[Dict], optional): Optional parameters to be passed to
             the NetApp, in the form of dict. Defaults to None.
+            wait_until_available: If True, the client will repeatedly try to register
+                with the Network Application until it is available. Defaults to False.
+            wait_timeout: How long the client will try to connect to network application.
+                Only used if wait_until_available is True. If negative, the client
+                will waits indefinitely. Defaults to -1.
 
         Raises:
             FailedToConnect: _description_
@@ -97,16 +106,22 @@ class NetAppClientBase:
         """
 
         self.netapp_location = netapp_location
-        namespaces_to_connect = ["/data", "/control", "/results"]
-        try:
-            self._sio.connect(
-                self.netapp_location.build_api_endpoint(""),
-                namespaces=namespaces_to_connect,
-                wait_timeout=10,
-            )
-        except ConnectionError as ex:
-            raise FailedToConnect(ex)
 
+        namespaces_to_connect = ["/data", "/control", "/results"]
+        start_time = time.time()
+        while True:
+            try:
+                self._sio.connect(
+                    self.netapp_location.build_api_endpoint(""),
+                    namespaces=namespaces_to_connect,
+                    wait_timeout=10,
+                )
+                break
+            except ConnectionError as ex:
+                if not wait_until_available or (wait_timeout > 0 and start_time + wait_timeout < time.time()):
+                    raise FailedToConnect(ex)
+                logging.warn("Failed to connect to network application. Retrying in 1 second.")
+                time.sleep(1)
         logger.info(f"Client connected to namespaces: {namespaces_to_connect}")
 
         if args and args.get("h264") is True:
@@ -165,14 +180,21 @@ class NetAppClientBase:
             self.disconnect()
             raise e
 
+    def send_image_ws_raw(self, data: Dict):
+        """Sends already encoded image data to /data namespace.
+
+        Args:
+            data (Dict): _description_
+        """
+        self._sio.emit("image", data, "/data")
+
     def send_json_ws(self, json: Dict) -> None:
         """Sends netapp-specific json data using the websockets.
 
         Args:
             json (dict): Json data in the form of Python dictionary
         """
-
-        self._sio.call("json", json, "/data")
+        self._sio.emit("json", json, "/data")
 
     def send_control_command(self, control_command):
         """Sends control command over the websocket.

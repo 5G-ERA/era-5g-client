@@ -145,6 +145,8 @@ class NetAppClient(NetAppClientBase):
         self,
         netapp_location: NetAppLocation,
         args: Optional[Dict] = None,
+        wait_until_available: bool = False,
+        wait_timeout: int = -1,
     ) -> None:
         """Calls the /register endpoint of the NetApp interface and if the
         registration is successful, it sets up the WebSocket connection for
@@ -153,6 +155,11 @@ class NetAppClient(NetAppClientBase):
         Args:
             netapp_location (NetAppLocation): The URI and port of the NetApp interface.
             args (Optional[Dict], optional): NetApp-specific arguments. Defaults to None.
+            wait_until_available: If True, the client will repeatedly try to register
+                with the Network Application until it is available. Defaults to False.
+            wait_timeout: How long the client will try to connect to network application.
+                Only used if wait_until_available is True. If negative, the client
+                will waits indefinitely. Defaults to -1.
 
         Raises:
             NetAppNotReady: Raised when register called before the NetApp is ready.
@@ -167,7 +174,7 @@ class NetAppClient(NetAppClientBase):
         if not self.resource_checker.is_ready():
             raise NetAppNotReady("Not ready.")
 
-        super().register(netapp_location, args)
+        super().register(netapp_location, args, wait_until_available, wait_timeout)
 
     def disconnect(self) -> None:
         """Calls the /unregister endpoint of the server and disconnects the
