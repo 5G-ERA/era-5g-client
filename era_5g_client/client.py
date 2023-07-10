@@ -2,9 +2,8 @@ import logging
 import os
 from collections.abc import Callable
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
-import numpy as np
 import requests
 from requests import HTTPError
 
@@ -12,8 +11,6 @@ from era_5g_client.client_base import NetAppClientBase
 from era_5g_client.dataclasses import MiddlewareInfo, NetAppLocation
 from era_5g_client.exceptions import FailedToConnect, NetAppNotReady
 from era_5g_client.middleware_resource_checker import MiddlewareResourceChecker
-
-buffer: List[Tuple[np.ndarray, Optional[str]]] = []
 
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
@@ -109,12 +106,6 @@ class NetAppClient(NetAppClientBase):
             resource_lock (bool): TBA
             mode (Optional[RunTaskMode]): Specify the mode in which the run_task
                 works
-            gstreamer (Optional[bool], optional):  Indicates if a GStreamer pipeline
-                should be initialized for image transport. Applied only if register
-                is True. Defaults to False.
-            ws_data (Optional[bool], optional): Indicates if a separate websocket channel
-                for data transport should be set. Applied only if register
-                is True. Defaults to False.
             args (Optional[Dict], optional): NetApp-specific arguments. Applied only if register
                 is True. Defaults to None.
 
@@ -161,13 +152,6 @@ class NetAppClient(NetAppClientBase):
 
         Args:
             netapp_location (NetAppLocation): The URI and port of the NetApp interface.
-            gstreamer (Optional[bool], optional):  Indicates if a GStreamer pipeline
-                should be initialized for image transport. Defaults to False.
-            ws_data (Optional[bool], optional): Indicates if a separate websocket channel
-                for data transport should be set. Defaults to False.
-            use_control_cmds (Optional[bool], optional): Indicates if a websocket channel
-                for control commands should be used. Control commands are indended for
-                changing the internal state of a stateful NetApp. Defaults to False.
             args (Optional[Dict], optional): NetApp-specific arguments. Defaults to None.
 
         Raises:

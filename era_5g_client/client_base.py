@@ -3,7 +3,7 @@ import logging
 import os
 from collections.abc import Callable
 from dataclasses import asdict
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Optional, Union
 
 import cv2
 import numpy as np
@@ -13,6 +13,11 @@ from socketio.exceptions import ConnectionError
 from era_5g_client.dataclasses import NetAppLocation
 from era_5g_client.exceptions import FailedToConnect
 from era_5g_interface.dataclasses.control_command import ControlCmdType, ControlCommand
+from era_5g_interface.h264_encoder import H264Encoder, H264EncoderError  # type: ignore
+
+# TODO: type ignored will be removed after release on pip
+
+logger = logging.getLogger(__name__)
 
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
@@ -54,7 +59,6 @@ class NetAppClientBase:
             FailedToObtainPlan: When the plan was not successfully returned from
                 the middleware
         """
-
         self._sio = socketio.Client()
         self.netapp_location: Union[NetAppLocation, None] = None
         self._sio.on("message", results_event, namespace="/results")
@@ -65,9 +69,7 @@ class NetAppClientBase:
         self._sio.on("control_cmd_result", control_cmd_event, namespace="/control")
         self._sio.on("control_cmd_error", control_cmd_error_event, namespace="/control")
         self._session_cookie: Optional[str] = None
-        # holds the gstreamer port
-        self.gstreamer_port: Optional[int] = None
-        self._buffer: List[Tuple[np.ndarray, Optional[str]]] = []
+        self.h264_encoder: Optional[H264Encoder] = None
         self._image_error_event = image_error_event
         self._json_error_event = json_error_event
         self._control_cmd_event = control_cmd_event
@@ -84,8 +86,6 @@ class NetAppClientBase:
 
         Args:
             netapp_location (NetAppLocation): The URI and port of the NetApp interface.
-            gstreamer (Optional[bool], optional): Indicates if a GStreamer pipeline
-                should be initialized for image transport. Defaults to False.
             args (Optional[Dict], optional): Optional parameters to be passed to
             the NetApp, in the form of dict. Defaults to None.
 
@@ -97,7 +97,6 @@ class NetAppClientBase:
         """
 
         self.netapp_location = netapp_location
-
         namespaces_to_connect = ["/data", "/control", "/results"]
         try:
             self._sio.connect(
@@ -107,7 +106,11 @@ class NetAppClientBase:
             )
         except ConnectionError as ex:
             raise FailedToConnect(ex)
-        logging.info(f"Client connected to namespaces: {namespaces_to_connect}")
+
+        logger.info(f"Client connected to namespaces: {namespaces_to_connect}")
+
+        if args and args.get("h264") is True:
+            self.h264_encoder = H264Encoder(float(args["fps"]), int(args["width"]), int(args["height"]))
 
         if args is None:  # TODO would be probably better to handle in ControlCommand
             args = {}
@@ -126,28 +129,41 @@ class NetAppClientBase:
 
     def on_connect_event(self) -> None:
         """The callback called once the connection to the NetApp is made."""
-        print("Connected to server")
+        logger.info("Connected to server")
 
-    def on_connect_error(self, data: str) -> None:
+    def on_connect_error(self, message=None) -> None:
         """The callback called on connection error."""
-        print(f"Connection error: {data}")
-        # self.disconnect()
+        logger.error(f"Connection error: {message}")
+        self.disconnect()
 
-    def send_image_ws(self, frame: np.ndarray, timestamp: Optional[str] = None, metadata: Optional[str] = None):
-        """Encodes the image frame to the jpg format and sends it over the
-        websocket, to the /data namespace.
+    def send_image_ws(self, frame: np.ndarray, timestamp: Optional[int] = None, metadata: Optional[str] = None):
+        """Encodes the image frame to the jpg or h264 format and sends it over
+        the websocket, to the /data namespace.
 
         Args:
             frame (np.ndarray): Image frame
-            timestamp (Optional[str], optional): Frame timestamp The timestamp format
-            is defined by the NetApp. Defaults to None.
+            timestamp (Optional[int], optional): Frame timestamp
+            metadata (Optional[str], optional): Optional metadata
         """
-        _, img_encoded = cv2.imencode(".jpg", frame)
-        f = base64.b64encode(img_encoded)
-        data = {"timestamp": timestamp, "frame": f}
-        if metadata:
-            data["metadata"] = metadata
-        self._sio.emit("image", data, "/data")
+
+        try:
+            if self.h264_encoder:
+                frame_encoded = self.h264_encoder.encode_ndarray(frame)
+            else:
+                _, frame_jpeg = cv2.imencode(".jpg", frame)
+                frame_encoded = base64.b64encode(frame_jpeg)
+            data = {"timestamp": timestamp, "frame": frame_encoded}
+            if metadata:
+                data["metadata"] = metadata
+            self._sio.emit("image", data, "/data")
+        except H264EncoderError as e:
+            logger.error(f"H264 encoder error: {e}")
+            self.disconnect()
+            raise e
+        except Exception as e:
+            logger.error(f"Send image emit error: {e}")
+            self.disconnect()
+            raise e
 
     def send_json_ws(self, json: Dict) -> None:
         """Sends netapp-specific json data using the websockets.
@@ -155,6 +171,7 @@ class NetAppClientBase:
         Args:
             json (dict): Json data in the form of Python dictionary
         """
+
         self._sio.call("json", json, "/data")
 
     def send_control_command(self, control_command):
@@ -164,4 +181,4 @@ class NetAppClientBase:
             control_command (ControlCommand): Control command to be sent.
         """
 
-        self._sio.emit("command", asdict(control_command), "/control")
+        self._sio.call("command", asdict(control_command), "/control")

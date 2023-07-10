@@ -1,11 +1,11 @@
 python_sources(name="lib")
 
 pex_binary(
-    name="client_gstreamer",
-    entry_point="client_gstreamer.py",
+    name="client",
+    entry_point="client.py",
 )
 
 pex_binary(
-    name="client_http",
-    entry_point="client_http_no_middleware.py",
+    name="client_no_middleware",
+    entry_point="client_no_middleware.py",
 )

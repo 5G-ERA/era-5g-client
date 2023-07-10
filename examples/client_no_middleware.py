@@ -82,8 +82,7 @@ def main() -> None:
             if not ret:
                 break
             resized = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
-            timestamp_str = str(timestamp)
-            client.send_image_ws(resized, timestamp_str)
+            client.send_image_ws(resized, timestamp)
 
     except FailedToConnect as ex:
         print(f"Failed to connect to server ({ex})")

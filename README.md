@@ -1,8 +1,6 @@
 # era-5g-client
 
-A client application for 5G-ERA NetApps. Contains the basic implementation of the client (client.py) 
-and extended client for NetApps using the *gstreamer* for image stream transport. Besides, 
-two classes for sending data using the h264 stream are presented.
+A client application for 5G-ERA NetApps. Contains the basic implementation of the client (client.py).
 
 ## Related Repositories
 
@@ -33,7 +31,7 @@ or
 export FROM_SOURCE=True
 ```
 
-### Using middleware and gstreamer (examples/client_gstreamer.py)
+### Using middleware (examples/client.py)
 
 The first example uses middleware to deploy the NetApp and to handle its life cycle. 
 Therefore, the NetApp needs to be uploaded to the accessible docker repository 
@@ -56,10 +54,10 @@ The user and password could be registered with the **/register** endpoint on the
 (using Postman for example).
 
 ```bash
-python3 client_gstreamer.py
+python3 client.py
 ```
 
-### Avoiding middleware, using gstreamer transport (examples/client_gstreamer_no_middleware.py)
+### Avoiding middleware (examples/client_no_middleware.py)
 
 For local testing, the middleware could be avoided, so the NetApp needs to be started manually. 
 Basic configuration needs to be provided:
@@ -74,17 +72,7 @@ export NETAPP_PORT=5897
 ```
 
 ```bash
-python3 client_gstreamer_no_middleware.py
-```
-
-### Avoiding middleware, using http transport (examples/client_gstreamer_no_middleware.py)
-
-The config is the same as in the previous case, but instead of GStreamer, the images are sent to 
-the REST endpoint of the NetApp, so the timestamps are preserved and the results could be drawn 
-into the images and shown. 
-
-```bash
-python3 client_http.py
+python3 client_no_middleware.py
 ```
 
 ## Classes
@@ -93,24 +81,6 @@ python3 client_http.py
 
 Basic implementation of the client. Allows to register with the NetApp and set the websocket-based 
 communication for reading of results.
-
-### NetAppClientGstreamer (client_gstreamer.py)
-
-Besides the basic functionality of the client, this class allows to set the gstreamer-based channel 
-for h264 stream transport.
-
-### DataSenderGStreamer (data_sender_gstreamer.py)
-
-Class which allows to construct the h264 stream using gstreamer and send it to the NetApp.
-
-### DataSenderGStreamerFromFile (data_sender_gstreamer_from_file.py)
-
-Class which utilizes video file as gstreamer source and pass it to the NetApp.
-
-### DataSenderGStreamerFromSource (data_sender_gstreamer_from_source.py)
-
-Class which utilizes gstreamer source (e.g. v4l2src for grabbing stream from webcam) and pass it to 
-the NetApp.
 
 ## Contributing, development
 
@@ -127,5 +97,3 @@ the NetApp.
 - To generate distribution packages (`tar.gz` and `whl`), you may run `./pants package ::`.
 - For commit messages, please stick to 
 [https://www.conventionalcommits.org/en/v1.0.0/](https://www.conventionalcommits.org/en/v1.0.0/).
-- The package depends on `opencv-python`, but for full functionality, one has to compile OpenCV 
-  with support for GStreamer (we will provide pre-compiled whl in a near future).
