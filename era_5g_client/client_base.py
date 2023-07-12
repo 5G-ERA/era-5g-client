@@ -176,7 +176,7 @@ class NetAppClientBase:
             self.disconnect()
             raise e
         except Exception as e:
-            logger.error(f"Send image emit error: {e}")
+            logger.error(f"Send image emit error: {repr(e)}")
             self.disconnect()
             raise e
 
