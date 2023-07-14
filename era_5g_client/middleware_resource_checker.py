@@ -1,4 +1,5 @@
 import time
+import logging
 from threading import Event, Thread
 from typing import Callable, Dict, Optional
 
@@ -29,15 +30,15 @@ class MiddlewareResourceChecker(Thread):
         while not self.stop_event.is_set():
             resource_state = self.get_resource_status()
 
-            seq = resource_state.get("ActionSequence", [])
+            seq = resource_state.get("actionSequence", [])
             if seq:
                 services = seq[0].get("Services", [])
                 if services:
                     self.resource_state = services[0]
                     assert isinstance(self.resource_state, dict)
-                    self.status = self.resource_state.get("ServiceStatus", None)
-                    self.url = self.resource_state.get("ServiceUrl", None)
-
+                    self.status = self.resource_state.get("serviceStatus", None)
+                    self.url = self.resource_state.get("serviceUrl", None)
+                    logging.debug(f"serviceStatus: {self.status}")
             if self.state_callback:
                 self.state_callback(self.resource_state)
             time.sleep(0.5)  # TODO: adjust or use something similar to rospy.rate.sleep()

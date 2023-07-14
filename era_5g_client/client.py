@@ -6,11 +6,14 @@ from typing import Dict, Optional
 
 import requests
 from requests import HTTPError
+from urllib.parse import urlparse
 
 from era_5g_client.client_base import NetAppClientBase
-from era_5g_client.dataclasses import MiddlewareInfo, NetAppLocation
+from era_5g_client.dataclasses import MiddlewareInfo
 from era_5g_client.exceptions import FailedToConnect, NetAppNotReady
 from era_5g_client.middleware_resource_checker import MiddlewareResourceChecker
+
+logging.basicConfig()
 
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
@@ -39,6 +42,8 @@ class NetAppClient(NetAppClientBase):
         json_error_event: Optional[Callable] = None,
         control_cmd_event: Optional[Callable] = None,
         control_cmd_error_event: Optional[Callable] = None,
+        logging_level: int = logging.INFO,
+        socketio_debug: bool = False
     ) -> None:
         """Constructor.
 
@@ -61,7 +66,13 @@ class NetAppClient(NetAppClientBase):
                 the middleware
         """
 
-        super().__init__(results_event, image_error_event, json_error_event, control_cmd_event, control_cmd_error_event)
+        super().__init__(results_event, 
+                         image_error_event, 
+                         json_error_event, 
+                         control_cmd_event, 
+                         control_cmd_error_event, 
+                         logging_level, 
+                         socketio_debug)
 
         self.host: Optional[str] = None
         self.action_plan_id: Optional[str] = None
@@ -86,7 +97,7 @@ class NetAppClient(NetAppClientBase):
             # connect to the middleware
             self.token = self.gateway_login(self.middleware_info.user_id, self.middleware_info.password)
         except FailedToConnect as ex:
-            logging.error(f"Can't connect to middleware: {ex}")
+            self.logger.error(f"Can't connect to middleware: {ex}")
             raise
 
     def run_task(
@@ -117,7 +128,6 @@ class NetAppClient(NetAppClientBase):
             self.action_plan_id = self.gateway_get_plan(
                 task_id, resource_lock, robot_id
             )  # Get the plan_id by sending the token and task_id
-
             if not self.action_plan_id:
                 raise FailedToConnect("Failed to obtain action plan id...")
 
@@ -132,18 +142,18 @@ class NetAppClient(NetAppClientBase):
             if mode in [RunTaskMode.WAIT, RunTaskMode.WAIT_AND_REGISTER]:
                 self.wait_until_netapp_ready()
                 self.load_netapp_address()
-                if not self.netapp_location:
-                    raise FailedToConnect("Failed to obtain NetApp URI or port")
+                if not self.netapp_address:
+                    raise FailedToConnect("Failed to obtain network application address")
                 if mode == RunTaskMode.WAIT_AND_REGISTER:
-                    self.register(self.netapp_location, args)
+                    self.register(self.netapp_address, args, wait_until_available=True)
         except (FailedToConnect, NetAppNotReady) as ex:
             self.delete_all_resources()
-            logging.error(f"Failed to run task: {ex}")
+            self.logger.error(f"Failed to run task: {ex}")
             raise
 
     def register(
         self,
-        netapp_location: NetAppLocation,
+        netapp_address: str,
         args: Optional[Dict] = None,
         wait_until_available: bool = False,
         wait_timeout: int = -1,
@@ -153,7 +163,9 @@ class NetAppClient(NetAppClientBase):
         results retrieval.
 
         Args:
-            netapp_location (NetAppLocation): The URI and port of the NetApp interface.
+            netapp_address (str): The URL of the network application interface,
+                including the scheme and optionally port and path to the interface,
+                e.g. http://localhost:80 or http://gateway/path_to_interface
             args (Optional[Dict], optional): NetApp-specific arguments. Defaults to None.
             wait_until_available: If True, the client will repeatedly try to register
                 with the Network Application until it is available. Defaults to False.
@@ -167,14 +179,13 @@ class NetAppClient(NetAppClientBase):
         Returns:
             Response: The response from the NetApp.
         """
-
         if not self.resource_checker:
             raise NetAppNotReady("Not connected to the middleware.")
 
         if not self.resource_checker.is_ready():
             raise NetAppNotReady("Not ready.")
 
-        super().register(netapp_location, args, wait_until_available, wait_timeout)
+        super().register(netapp_address, args, wait_until_available, wait_timeout)
 
     def disconnect(self) -> None:
         """Calls the /unregister endpoint of the server and disconnects the
@@ -197,11 +208,12 @@ class NetAppClient(NetAppClientBase):
     def load_netapp_address(self) -> None:
         if not (self.resource_checker and self.resource_checker.is_ready()):
             raise NetAppNotReady
-        self.netapp_location = NetAppLocation(str(self.resource_checker.url), NETAPP_PORT)
+        # TODO: check somehow that the url is correct?
+        self.netapp_address = str(self.resource_checker.url)
 
     def gateway_login(self, user_id: str, password: str) -> str:
         assert self.middleware_info
-        print("Trying to log into the middleware")
+        self.logger.debug("Trying to log into the middleware")
         # Request Login
         try:
             r = requests.post(
@@ -226,7 +238,7 @@ class NetAppClient(NetAppClientBase):
         # Request plan
 
         try:
-            print("Goal task is: " + str(taskid))
+            self.logger.debug("Goal task is: " + str(taskid))
             hed = {"Authorization": f"Bearer {str(self.token)}"}
             data = {
                 "TaskId": str(taskid),
@@ -244,7 +256,7 @@ class NetAppClient(NetAppClientBase):
             # todo:             if "errors" in response:
             #                 raise FailedToConnect(str(response["errors"]))
             action_plan_id = str(response["ActionPlanId"])
-            print("ActionPlanId ** is: " + str(action_plan_id))
+            self.logger.debug("ActionPlanId ** is: " + str(action_plan_id))
             return action_plan_id
         except KeyError as e:
             raise FailedToConnect(f"Could not get the plan: {e}")
@@ -262,16 +274,16 @@ class NetAppClient(NetAppClientBase):
                 response = requests.delete(url, headers=hed)
 
                 if response.ok:
-                    print("Resource deleted")
+                    self.logger.debug("Resource deleted")
 
         except HTTPError as e:
-            print(e.response.status_code)
+            self.logger.debug(e.response.status_code)
             raise FailedToConnect("Error, could not get delete the resource, revisit the log files for more details.")
 
     def delete_single_resource(self) -> None:
         raise NotImplementedError  # TODO
 
     def gateway_log_off(self) -> None:
-        print("Middleware log out successful")
+        self.logger.debug("Middleware log out successful")
         # TODO
         pass
