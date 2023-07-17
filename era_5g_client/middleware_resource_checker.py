@@ -38,7 +38,7 @@ class MiddlewareResourceChecker(Thread):
                     assert isinstance(self.resource_state, dict)
                     self.status = self.resource_state.get("serviceStatus", None)
                     self.url = self.resource_state.get("serviceUrl", None)
-                    logging.debug(f"serviceStatus: {self.status}")
+                    logging.debug(f"{self.status=}, {self.url=}")
             if self.state_callback:
                 self.state_callback(self.resource_state)
             time.sleep(0.5)  # TODO: adjust or use something similar to rospy.rate.sleep()
