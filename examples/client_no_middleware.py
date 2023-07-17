@@ -9,17 +9,14 @@ from typing import Any, Dict, Optional
 import cv2
 
 from era_5g_client.client_base import NetAppClientBase
-from era_5g_client.dataclasses import NetAppLocation
 from era_5g_client.exceptions import FailedToConnect
 
 stopped = False
 
 # Video from source flag
 FROM_SOURCE = os.getenv("FROM_SOURCE", "").lower() in ("true", "1")
-# ip address or hostname of the computer, where the netapp is deployed
-NETAPP_ADDRESS = os.getenv("NETAPP_ADDRESS", "127.0.0.1")
-# port of the netapp's server
-NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
+# URL of the network application, including the schema and port (e.g., http://localhost:5896)
+NETAPP_ADDRESS = os.getenv("NETAPP_ADDRESS", "http//localhost:5896")
 
 # test video file
 if not FROM_SOURCE:
@@ -63,7 +60,7 @@ def main() -> None:
         # creates an instance of NetApp client with results callback
         client = NetAppClientBase(get_results)
         # register with an ad-hoc deployed NetApp
-        client.register(NetAppLocation(NETAPP_ADDRESS, NETAPP_PORT))
+        client.register(NETAPP_ADDRESS)
 
         if FROM_SOURCE:
             # creates a video capture to pass images to the NetApp either from webcam ...

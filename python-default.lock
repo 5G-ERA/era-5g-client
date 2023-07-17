@@ -9,7 +9,7 @@
 //     "CPython<3.11,>=3.8"
 //   ],
 //   "generated_with_requirements": [
-//     "era-5g-interface~=0.3.0",
+//     "era-5g-interface~=0.4.0",
 //     "numpy>=1.24.2",
 //     "opencv-python>=4.6.0.66",
 //     "python-socketio>=5.8.0",
@@ -33,6 +33,134 @@
   "locked_resolves": [
     {
       "locked_requirements": [
+        {
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "1cdede2325cb750b5bf79238bbf06f9c2a70b757b12726003769a43493b7233a",
+              "url": "https://files.pythonhosted.org/packages/06/0a/5648e8d3198f96e4201f8bf2256e4718473b8299dde328b83d4753911c3a/av-10.0.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "8afd3d5610e1086f3b2d8389d66672ea78624516912c93612de64dcaa4c67e05",
+              "url": "https://files.pythonhosted.org/packages/09/45/eb750ba15c44e8106f58a22e6789f5ddbe5584d9dcb4e755b08d47ed6261/av-10.0.0.tar.gz"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "a2cfd39baa5d82768d2a8898de7bfd450a083ef22b837d57e5dc1b6de3244218",
+              "url": "https://files.pythonhosted.org/packages/09/fc/9ef3f6ca972d02758e5f54a9eb1eb402bff244dda9fe0724f62c756afaf7/av-10.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "088636ded03724a2ab51136f6f4be0bc457bdb3c0d2ac7158792fe81150d4c1a",
+              "url": "https://files.pythonhosted.org/packages/0b/76/7706ba04bc87efae370438bbd51377dfe303b90871b7a5eadb4483d2ba70/av-10.0.0-cp38-cp38-macosx_10_9_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "27d6d38c7c8d46d578c008ffcb8aad1eae14d0621fff41f4ad62395589045fe4",
+              "url": "https://files.pythonhosted.org/packages/0e/98/1b3c53e1fd44e8e7ee05d8d525fc9df86aa53ad9ca4ccef0e68a99cf4428/av-10.0.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "ff0f7d3b1003a9ed0d06038f3f521a5ff0d3e056ec5111e2a78e303f98b815a7",
+              "url": "https://files.pythonhosted.org/packages/21/66/38b8ad443f3694d7facc24e8eb6c04ec2b0353476aa225db443de1b6906d/av-10.0.0-cp38-cp38-macosx_11_0_arm64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "a62edd533d330aa61902ae8cd82966affa487fa337a0c4f58ae8866ccb5d31c0",
+              "url": "https://files.pythonhosted.org/packages/22/80/ef3dfe3b4659582788b32992a141a1774fa8e261c742b985c01bcd0f4ebb/av-10.0.0-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "51037f4bde03daf924236af4f444e17345792ad7f6f70760a5e5863407e14f2b",
+              "url": "https://files.pythonhosted.org/packages/26/86/5b80417f0f882c08eda6b05fa81d79cd1f8aa56d555a9109fa2df711d73c/av-10.0.0-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "a6c8f3f8c26d35eefe45b849c81fd0816ba4b6f589baec7357c25b4c5537d3c4",
+              "url": "https://files.pythonhosted.org/packages/31/f2/476757c405e3e0dc4fc4a74cb6b9a68ac088672d3598864b20ce7607d03e/av-10.0.0-cp39-cp39-macosx_11_0_arm64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "91ea46fea7259abdfabe00b0ed3a9ca18e7fff7ce80d2a2c66a28f797cce838a",
+              "url": "https://files.pythonhosted.org/packages/41/75/028f8a40f6b636413e4ee48857706f50ab9b042ef6f9866262184b989b88/av-10.0.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "ab930735112c1f788cc4d47c42c59ba0dd214d815aa906e1addf39af91d15194",
+              "url": "https://files.pythonhosted.org/packages/4b/df/c5ebef01e7ff9482927313dbe67d722b04a0a3f6e8434299d11a456276b6/av-10.0.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "98cc376199c0aa6e9365d03e0f4e67cfb209e40fe9c0cf566372f9daf2a0c779",
+              "url": "https://files.pythonhosted.org/packages/61/48/50ec4784ef5279ec9b15cbda1caaccc8a903592f70fb268e5bb06cc9317c/av-10.0.0-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "13fe0b48b9211539323ecebbf84154c86c72d16723c6d0af76e29ae5c3a614b2",
+              "url": "https://files.pythonhosted.org/packages/6e/36/54760ce5f330fd634a2032280ebafd94322b960808c9a9d93b0d7ab545e6/av-10.0.0-pp39-pypy39_pp73-macosx_10_9_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "b67b7d028c9cf68215376662fd2e0be6ca0cc02d32d3ed8514fec67b12db9cbd",
+              "url": "https://files.pythonhosted.org/packages/7c/7c/76633096637961155c02a7a082a697c70a992c757e11e20d176f21d3dead/av-10.0.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "0577a38664e453b4ffb63d616a0d23c295827b16ae96a090e89527a753de8718",
+              "url": "https://files.pythonhosted.org/packages/85/d7/0c0b99b302f8973481fe08b9ec5043bcf0708e56f21512ae0fb697fa02d8/av-10.0.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "c2eeec7beaebfe9e2213b3c94b482381187d0afdcb632f93239b44dc668b97df",
+              "url": "https://files.pythonhosted.org/packages/91/e9/41039b013ed36c012649378e537d3de5bfb4e60be397bceaa764281cc33c/av-10.0.0-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "d19bb54197155d045a2b683d993026d4bcb06e31c2acad0327e3e8711571899c",
+              "url": "https://files.pythonhosted.org/packages/9e/f4/47de1de3fcc23cb199a1ead44a207457933e535efcdea433a8d15edbd9a6/av-10.0.0-cp310-cp310-macosx_10_9_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "1b459ca0ef25c1a0e370112556bdc5b7752f76dc9bd497acaf3e653171e4b946",
+              "url": "https://files.pythonhosted.org/packages/a3/a9/0fff83b525d96ff8a37b32b4cc4b0eddf70195c848136d2029252e53e3be/av-10.0.0-pp38-pypy38_pp73-manylinux_2_17_i686.manylinux2014_i686.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "7dba96a85cd37315529998e6dbbe3fa05c2344eb19a431dc24996be030a904ee",
+              "url": "https://files.pythonhosted.org/packages/a5/39/da12543d3d91252a8c15834103119c130fc5b6a2f2f9366e67c0130ad407/av-10.0.0-cp310-cp310-macosx_11_0_arm64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "ccaf786e747b126a5b3b9a8f5ffbb6a20c5f528775cc7084c95732ca72606fba",
+              "url": "https://files.pythonhosted.org/packages/b3/e6/e01a8cc5b7fa245ce283883643d34462cc2c43e734461ab9c13a2c707252/av-10.0.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "16bd82b63d0b4c1b855b3c36b13337f7cdc5925bd8284fab893bdf6c290fc3a9",
+              "url": "https://files.pythonhosted.org/packages/bf/f2/b98e7e2e6e0beb91a1ddedbf762266378c38992779ae9a1bb90e939a9f59/av-10.0.0-cp39-cp39-macosx_10_9_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "f7b508813abbc100162d305a1ac9b2dd16e5128d56f2ac69639fc6a4b5aca69e",
+              "url": "https://files.pythonhosted.org/packages/cd/cf/d624b874416d3dff10e365367233e3f944e56fe8c961a09a9379d2158da7/av-10.0.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "3dac2a8b0791c3373270e32f6cd27e6b60628565a188e40a5d9660d3aab05e33",
+              "url": "https://files.pythonhosted.org/packages/e1/c5/12ceb8b418acc507dc8abd2c1cecedd621bc1cdbdf63efefa1b8418304ff/av-10.0.0-pp39-pypy39_pp73-manylinux_2_17_i686.manylinux2014_i686.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "7c579d718b52beb812ea2a7bd68f812d0920b00937804d52d31d41bb71aa5557",
+              "url": "https://files.pythonhosted.org/packages/eb/5c/4e13b7f76c5dfe16e4511440e8130b88484f9b3c26d88e6cba5495e8dc9a/av-10.0.0-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl"
+            }
+          ],
+          "project_name": "av",
+          "requires_dists": [],
+          "requires_python": null,
+          "version": "10.0.0"
+        },
         {
           "artifacts": [
             {
@@ -299,22 +427,24 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "5b402f9cb77fb0772028b8f217aa2917ea4236f541d5827c8f3d984f7ca33623",
-              "url": "https://files.pythonhosted.org/packages/cb/fc/aec8b99daf017010d93cd9ab45376e4a434dc2999b05976212e4695bf76e/era_5g_interface-0.3.0-py3-none-any.whl"
+              "hash": "5ac37bafd2c738ddfd1f39825035fa356a13fdd5207f1c13bd16fac0148658eb",
+              "url": "https://files.pythonhosted.org/packages/11/37/13f038cd467162a6d622336a38619341629929901491903af786f42c1937/era_5g_interface-0.4.0-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "20ec58a39275891e9d9b4f1d59397ec7e39666fc8179ddcd59ba0974107230f0",
-              "url": "https://files.pythonhosted.org/packages/72/c9/6ea9ad656888f459a4aa54624697948f50d92a67661bcb271babe6c502a6/era_5g_interface-0.3.0.tar.gz"
+              "hash": "dc133d39305a27791f6a2fecab32a15969495280a2ae2aa9b7c998ad29109a46",
+              "url": "https://files.pythonhosted.org/packages/b4/b5/c7903b61a57d54eb3c2f0d436dd730045cbf519534e5c7a2427f1bcab881/era_5g_interface-0.4.0.tar.gz"
             }
           ],
           "project_name": "era-5g-interface",
           "requires_dists": [
-            "numpy~=1.24.4",
-            "opencv-python~=4.6.0.66"
+            "av>=10.0.0",
+            "numpy>=1.24.4",
+            "requests>=2.28.2",
+            "types-requests==2.31.0.1"
           ],
           "requires_python": "<3.11,>=3.8",
-          "version": "0.3.0"
+          "version": "0.4.0"
         },
         {
           "artifacts": [
@@ -421,42 +551,44 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "6e32af22e3202748bd233ed8f538741876191863882eba44e332d1a34993165b",
-              "url": "https://files.pythonhosted.org/packages/c6/00/858e894a2127b3a1b5479812b1bd3669bca64175dff4fc7c778e0a6ee565/opencv_python-4.6.0.66-cp37-abi3-macosx_11_0_arm64.whl"
+              "hash": "43dd0dfe331fb95767af581bf3b2781d7a72cf6560ddf2f55949fe547f3e5c9f",
+              "url": "https://files.pythonhosted.org/packages/34/7c/8a5043f362b0a55f07812a0db3f86092cdbd0fe41b933d7bc6fce3ab6c15/opencv_python-4.8.0.74-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "5af8ba35a4fcb8913ffb86e92403e9a656a4bff4a645d196987468f0f8947875",
-              "url": "https://files.pythonhosted.org/packages/12/5d/1527327b9f7ea13bef31377f8bf399f03dc5f4f1c9f1fb69bc56b6e24cd4/opencv_python-4.6.0.66-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+              "hash": "038ba7075e55cb8e2846663ae970f0fb776a45b48ee69a887bf4ee15e2570083",
+              "url": "https://files.pythonhosted.org/packages/96/7b/9b3a72a6afa0f98035db324966404f2471489068617e2a781ace121f9615/opencv_python-4.8.0.74-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "c5bfae41ad4031e66bb10ec4a0a2ffd3e514d092652781e8b1ac98d1b59f1158",
-              "url": "https://files.pythonhosted.org/packages/7a/1c/e57fe138615c29b8d1442009057dd420c58d4773cb16112e914c9e7b47d8/opencv-python-4.6.0.66.tar.gz"
+              "hash": "66eadb5882ee56848b67f9fb57aadcaca2f4c9d9d00a0ef11043041925b51291",
+              "url": "https://files.pythonhosted.org/packages/b1/ca/69f7f2204d5779ad939123cce9735f76db8f50e2b482e45b413c585b0b27/opencv_python-4.8.0.74-cp37-abi3-macosx_11_0_arm64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "dbdc84a9b4ea2cbae33861652d25093944b9959279200b7ae0badd32439f74de",
-              "url": "https://files.pythonhosted.org/packages/af/bf/8d189a5c43460f6b5c8eb81ead8732e94b9f73ef8d9abba9e8f5a61a6531/opencv_python-4.6.0.66-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+              "hash": "31d0d59fc8fdf703de4cec46c79b9f8d026fdde9d23d6e2e6a66809feeebbda9",
+              "url": "https://files.pythonhosted.org/packages/ec/30/9b24a6e7021447788fa89ae5c215fb5c17b893585ddc6ac553632cc1b761/opencv_python-4.8.0.74-cp37-abi3-macosx_10_16_x86_64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "e6e448b62afc95c5b58f97e87ef84699e6607fe5c58730a03301c52496005cae",
-              "url": "https://files.pythonhosted.org/packages/bc/71/4575227302db0b95bbf635dd87f2c58339f84c6e63ade1afc7d332414da2/opencv_python-4.6.0.66-cp36-abi3-macosx_10_15_x86_64.whl"
+              "hash": "009e3ce356a0cd2d7423723e00a32fd3d3cc5bb5970ed27a9a1f8a8f221d1db5",
+              "url": "https://files.pythonhosted.org/packages/fa/1d/990ad4eb4d385fabb2773170cf865977b6d5b558dd51459672f7cf7d1847/opencv-python-4.8.0.74.tar.gz"
             }
           ],
           "project_name": "opencv-python",
           "requires_dists": [
             "numpy>=1.13.3; python_version < \"3.7\"",
-            "numpy>=1.14.5; python_version >= \"3.7\"",
+            "numpy>=1.17.0; python_version >= \"3.7\"",
             "numpy>=1.17.3; python_version >= \"3.8\"",
             "numpy>=1.19.3; python_version >= \"3.6\" and platform_system == \"Linux\" and platform_machine == \"aarch64\"",
             "numpy>=1.19.3; python_version >= \"3.9\"",
+            "numpy>=1.21.0; python_version <= \"3.9\" and platform_system == \"Darwin\" and platform_machine == \"arm64\"",
             "numpy>=1.21.2; python_version >= \"3.10\"",
-            "numpy>=1.21.2; python_version >= \"3.6\" and platform_system == \"Darwin\" and platform_machine == \"arm64\""
+            "numpy>=1.21.4; python_version >= \"3.10\" and platform_system == \"Darwin\"",
+            "numpy>=1.23.5; python_version >= \"3.11\""
           ],
           "requires_python": ">=3.6",
-          "version": "4.6.0.66"
+          "version": "4.8.0.74"
         },
         {
           "artifacts": [
@@ -629,7 +761,7 @@
   "pip_version": "20.3.4-patched",
   "prefer_older_binary": false,
   "requirements": [
-    "era-5g-interface~=0.3.0",
+    "era-5g-interface~=0.4.0",
     "numpy>=1.24.2",
     "opencv-python>=4.6.0.66",
     "python-socketio>=5.8.0",

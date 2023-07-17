@@ -1,6 +1,5 @@
 import base64
 import logging
-import os
 import time
 from collections.abc import Callable
 from dataclasses import asdict
@@ -13,13 +12,9 @@ from socketio.exceptions import ConnectionError
 
 from era_5g_client.exceptions import FailedToConnect
 from era_5g_interface.dataclasses.control_command import ControlCmdType, ControlCommand
-from era_5g_interface.h264_encoder import H264Encoder, H264EncoderError  # type: ignore
-
-from urllib.parse import urlparse
-# TODO: type ignored will be removed after release on pip
+from era_5g_interface.h264_encoder import H264Encoder, H264EncoderError
 
 logging.basicConfig()
-
 
 
 class NetAppClientBase:
@@ -37,7 +32,7 @@ class NetAppClientBase:
         control_cmd_event: Optional[Callable] = None,
         control_cmd_error_event: Optional[Callable] = None,
         logging_level: int = logging.INFO,
-        socketio_debug: bool = False
+        socketio_debug: bool = False,
     ) -> None:
         """Constructor.
 
@@ -77,13 +72,13 @@ class NetAppClientBase:
         self._control_cmd_error_event = control_cmd_error_event
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
-        
+
     def register(
         self,
-        netapp_location: NetAppLocation,
+        netapp_address: str,
         args: Optional[Dict] = None,
         wait_until_available: bool = False,
-        wait_timeout: int = -1
+        wait_timeout: int = -1,
     ) -> None:
         """Calls the /register endpoint of the NetApp interface and if the
         registration is successful, it sets up the WebSocket connection for
@@ -126,7 +121,7 @@ class NetAppClientBase:
                     raise FailedToConnect(ex)
                 self.logger.warn("Failed to connect to network application. Retrying in 1 second.")
                 time.sleep(1)
-        
+
         self.logger.info(f"Client connected to namespaces: {namespaces_to_connect}")
 
         if args and args.get("h264") is True:
@@ -171,7 +166,8 @@ class NetAppClientBase:
                 frame_encoded = self.h264_encoder.encode_ndarray(frame)
             else:
                 _, frame_jpeg = cv2.imencode(".jpg", frame)
-                frame_encoded = base64.b64encode(frame_jpeg)
+                # TODO: check why type: ignore is needed for next line
+                frame_encoded = base64.b64encode(frame_jpeg)  # type: ignore
             data = {"timestamp": timestamp, "frame": frame_encoded}
             if metadata:
                 data["metadata"] = metadata

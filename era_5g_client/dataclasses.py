@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from urllib.parse import urlunparse
 
 
 @dataclass
@@ -21,6 +20,3 @@ class MiddlewareInfo:
         """
 
         return f"http://{self.address}/{path}"
-
-
-

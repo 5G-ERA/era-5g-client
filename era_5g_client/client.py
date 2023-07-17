@@ -6,14 +6,11 @@ from typing import Dict, Optional
 
 import requests
 from requests import HTTPError
-from urllib.parse import urlparse
 
 from era_5g_client.client_base import NetAppClientBase
 from era_5g_client.dataclasses import MiddlewareInfo
 from era_5g_client.exceptions import FailedToConnect, NetAppNotReady
 from era_5g_client.middleware_resource_checker import MiddlewareResourceChecker
-
-logging.basicConfig()
 
 # port of the netapp's server
 NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
@@ -43,7 +40,7 @@ class NetAppClient(NetAppClientBase):
         control_cmd_event: Optional[Callable] = None,
         control_cmd_error_event: Optional[Callable] = None,
         logging_level: int = logging.INFO,
-        socketio_debug: bool = False
+        socketio_debug: bool = False,
     ) -> None:
         """Constructor.
 
@@ -66,13 +63,15 @@ class NetAppClient(NetAppClientBase):
                 the middleware
         """
 
-        super().__init__(results_event, 
-                         image_error_event, 
-                         json_error_event, 
-                         control_cmd_event, 
-                         control_cmd_error_event, 
-                         logging_level, 
-                         socketio_debug)
+        super().__init__(
+            results_event,
+            image_error_event,
+            json_error_event,
+            control_cmd_event,
+            control_cmd_error_event,
+            logging_level,
+            socketio_debug,
+        )
 
         self.host: Optional[str] = None
         self.action_plan_id: Optional[str] = None
