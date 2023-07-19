@@ -14,8 +14,6 @@ from era_5g_client.exceptions import FailedToConnect
 from era_5g_interface.dataclasses.control_command import ControlCmdType, ControlCommand
 from era_5g_interface.h264_encoder import H264Encoder, H264EncoderError
 
-logging.basicConfig()
-
 
 class NetAppClientBase:
     """Basic implementation of the NetApp client.
@@ -55,7 +53,7 @@ class NetAppClientBase:
             FailedToObtainPlan: When the plan was not successfully returned from
                 the middleware
         """
-        self._sio = socketio.Client(logger=socketio_debug)
+        self._sio = socketio.Client(logger=socketio_debug, reconnection_attempts=1, handle_sigint=False)
         self.netapp_address: Union[str, None] = None
         self._sio.on("message", results_event, namespace="/results")
         self._sio.on("connect", self.on_connect_event, namespace="/results")
@@ -177,6 +175,7 @@ class NetAppClientBase:
             self.disconnect()
             raise e
         except Exception as e:
+            # TODO: Create recovery sequence if server goes down and then starts up again
             self.logger.error(f"Send image emit error: {e}")
             self.disconnect()
             raise e

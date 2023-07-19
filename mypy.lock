@@ -6,7 +6,7 @@
 // {
 //   "version": 3,
 //   "valid_for_interpreter_constraints": [
-//     "CPython<3.11,>=3.8"
+//     "CPython>=3.8"
 //   ],
 //   "generated_with_requirements": [
 //     "mypy==1.4.1",
@@ -64,6 +64,26 @@
               "algorithm": "sha256",
               "hash": "ae704dcfaa180ff7c4cfbad23e74321a2b774f92ca77fd94ce1049175a21c97f",
               "url": "https://files.pythonhosted.org/packages/64/7d/156e721376951c449554942eedf4d53e9ca2a57e94bf0833ad2821d59bfa/mypy-1.4.1-cp38-cp38-musllinux_1_1_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "8207b7105829eca6f3d774f64a904190bb2231de91b8b186d21ffd98005f14a7",
+              "url": "https://files.pythonhosted.org/packages/66/f4/60739a2d336f3adf5628e7c9b920d16e8af6dc078550d615e4ba2a1d7759/mypy-1.4.1-cp311-cp311-musllinux_1_1_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "141dedfdbfe8a04142881ff30ce6e6653c9685b354876b12e4fe6c78598b45e2",
+              "url": "https://files.pythonhosted.org/packages/73/72/dfc0b46e6905eafd598e7c48c0c4f2e232647e4e36547425c64e6c850495/mypy-1.4.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "98324ec3ecf12296e6422939e54763faedbfcc502ea4a4c38502082711867258",
+              "url": "https://files.pythonhosted.org/packages/92/58/ccc0b714ecbd1a64b34d8ce1c38763ff6431de1d82551904ecc3711fbe05/mypy-1.4.1-cp311-cp311-macosx_11_0_arm64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "7549fbf655e5825d787bbc9ecf6028731973f78088fbca3a1f4145c39ef09462",
+              "url": "https://files.pythonhosted.org/packages/94/01/e34e37a044325af4d4af9825c15e8a0d26d89b5a9624b4d0908449d3411b/mypy-1.4.1-cp311-cp311-macosx_10_9_x86_64.whl"
             },
             {
               "algorithm": "sha256",
@@ -157,6 +177,11 @@
             },
             {
               "algorithm": "sha256",
+              "hash": "7215847ce88a85ce39baf9e89070cb860c98fdddacbaa6c0da3ffb31b3350bd5",
+              "url": "https://files.pythonhosted.org/packages/22/97/dfb1a31bb46686f09e68ea6ac5c63fdee0d22d7b23b8f3f7ea07712869ef/numpy-1.24.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
               "hash": "a5425b114831d1e77e4b5d812b69d11d962e104095a5b9c3b641a218abcc050e",
               "url": "https://files.pythonhosted.org/packages/25/6f/2586a50ad72e8dbb1d8381f837008a0321a3516dfd7cb57fc8cf7e4bb06b/numpy-1.24.4-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
             },
@@ -207,8 +232,23 @@
             },
             {
               "algorithm": "sha256",
+              "hash": "222e40d0e2548690405b0b3c7b21d1169117391c2e82c378467ef9ab4c8f0da7",
+              "url": "https://files.pythonhosted.org/packages/a7/4c/96cdaa34f54c05e97c1c50f39f98d608f96f0677a6589e64e53104e22904/numpy-1.24.4-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+            },
+            {
+              "algorithm": "sha256",
               "hash": "04640dab83f7c6c85abf9cd729c5b65f1ebd0ccf9de90b270cd61935eef0197f",
               "url": "https://files.pythonhosted.org/packages/a7/ae/f53b7b265fdc701e663fbb322a8e9d4b14d9cb7b2385f45ddfabfc4327e4/numpy-1.24.4-cp38-cp38-macosx_11_0_arm64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "f136bab9c2cfd8da131132c2cf6cc27331dd6fae65f95f69dcd4ae3c3639c810",
+              "url": "https://files.pythonhosted.org/packages/a9/cc/5ed2280a27e5dab12994c884f1f4d8c3bd4d885d02ae9e52a9d213a6a5e2/numpy-1.24.4-cp311-cp311-macosx_10_9_x86_64.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "e2926dac25b313635e4d6cf4dc4e51c8c0ebfed60b801c799ffc4c32bf3d1254",
+              "url": "https://files.pythonhosted.org/packages/c0/bc/77635c657a3668cf652806210b8662e1aff84b818a55ba88257abf6637a8/numpy-1.24.4-cp311-cp311-macosx_11_0_arm64.whl"
             }
           ],
           "project_name": "numpy",
@@ -265,7 +305,7 @@
     "numpy~=1.24.4"
   ],
   "requires_python": [
-    "<3.11,>=3.8"
+    ">=3.8"
   ],
   "resolver_version": "pip-2020-resolver",
   "style": "universal",

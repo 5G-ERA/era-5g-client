@@ -9,12 +9,12 @@ python_distribution(
     sdist=True,
     provides=setup_py(
         name="era_5g_client",
-        version="0.4.0",
+        version="0.4.1",
         description="A client for 5G-ERA NetApps",
         author="Michal Kapinus",
         author_email="ikapinus@fit.vutbr.cz",
         license="LGPL",
-        python_requires=">=3.8,<3.11",
+        python_requires=">=3.8",
         classifiers=[
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",

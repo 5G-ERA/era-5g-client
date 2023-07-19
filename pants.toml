@@ -19,7 +19,7 @@ repo_id = "a888d69447a54a8892c9fe2cd1ea2ace"
 root_patterns = ["/"]
 
 [python]
-interpreter_constraints = [">=3.8,<3.11"]
+interpreter_constraints = [">=3.8"]
 resolves = { python-default = "python-default.lock", flake8 = "flake8.lock", mypy = "mypy.lock"}
 
 enable_resolves = true
