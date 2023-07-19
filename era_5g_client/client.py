@@ -1,4 +1,5 @@
 import logging
+import os
 from collections.abc import Callable
 from enum import Enum
 from typing import Dict, Optional
@@ -10,6 +11,9 @@ from era_5g_client.client_base import NetAppClientBase
 from era_5g_client.dataclasses import MiddlewareInfo
 from era_5g_client.exceptions import FailedToConnect, NetAppNotReady
 from era_5g_client.middleware_resource_checker import MiddlewareResourceChecker
+
+# port of the netapp's server
+NETAPP_PORT = int(os.getenv("NETAPP_PORT", 5896))
 
 
 class RunTaskMode(Enum):
