@@ -3,7 +3,7 @@ import logging
 import time
 from collections.abc import Callable
 from dataclasses import asdict
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import cv2
 import numpy as np
@@ -74,7 +74,7 @@ class NetAppClientBase:
     def register(
         self,
         netapp_address: str,
-        args: Optional[Dict] = None,
+        args: Optional[Dict[str, Any]] = None,
         wait_until_available: bool = False,
         wait_timeout: int = -1,
     ) -> None:
@@ -144,12 +144,14 @@ class NetAppClientBase:
         """The callback called once the connection to the NetApp is made."""
         self.logger.info("Connected to server")
 
-    def on_connect_error(self, message=None) -> None:
+    def on_connect_error(self, message: Optional[str] = None) -> None:
         """The callback called on connection error."""
         self.logger.error(f"Connection error: {message}")
         self.disconnect()
 
-    def send_image_ws(self, frame: np.ndarray, timestamp: Optional[int] = None, metadata: Optional[str] = None):
+    def send_image_ws(
+        self, frame: np.ndarray, timestamp: Optional[int] = None, metadata: Optional[Dict[str, Any]] = None
+    ):
         """Encodes the image frame to the jpg or h264 format and sends it over
         the websocket, to the /data namespace.
 
@@ -180,7 +182,7 @@ class NetAppClientBase:
             self.disconnect()
             raise e
 
-    def send_image_ws_raw(self, data: Dict):
+    def send_image_ws_raw(self, data: Dict[str, Any]) -> None:
         """Sends already encoded image data to /data namespace.
 
         Args:
@@ -188,7 +190,7 @@ class NetAppClientBase:
         """
         self._sio.emit("image", data, "/data")
 
-    def send_json_ws(self, json: Dict) -> None:
+    def send_json_ws(self, json: Dict[str, Any]) -> None:
         """Sends netapp-specific json data using the websockets.
 
         Args:
@@ -196,7 +198,7 @@ class NetAppClientBase:
         """
         self._sio.emit("json", json, "/data")
 
-    def send_control_command(self, control_command):
+    def send_control_command(self, control_command: ControlCommand) -> None:
         """Sends control command over the websocket.
 
         Args:

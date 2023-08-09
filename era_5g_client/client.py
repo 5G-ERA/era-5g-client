@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Callable
 from enum import Enum
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import requests
 from requests import HTTPError
@@ -101,7 +101,7 @@ class NetAppClient(NetAppClientBase):
         robot_id: str,
         resource_lock: bool,
         mode: Optional[RunTaskMode] = RunTaskMode.WAIT_AND_REGISTER,
-        args: Optional[Dict] = None,
+        args: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Deploys the task with provided *task_id* using middleware and
         (optionally) waits until the netapp is ready and register with it.
@@ -149,7 +149,7 @@ class NetAppClient(NetAppClientBase):
     def register(
         self,
         netapp_address: str,
-        args: Optional[Dict] = None,
+        args: Optional[Dict[str, Any]] = None,
         wait_until_available: bool = False,
         wait_timeout: int = -1,
     ) -> None:
