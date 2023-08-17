@@ -9,10 +9,10 @@
 //     "CPython>=3.8"
 //   ],
 //   "generated_with_requirements": [
-//     "era-5g-interface~=0.4.1",
+//     "era-5g-interface~=0.5.0",
 //     "numpy>=1.24.2",
 //     "opencv-python>=4.6.0.66",
-//     "python-socketio>=5.8.0",
+//     "python-socketio[client]>=5.8.0",
 //     "requests>=2.28.2",
 //     "types-requests==2.31.0.1",
 //     "websocket-client>=1.5.1"
@@ -221,19 +221,19 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "c6c2e98f5c7869efca1f8916fed228dd91539f9f1b444c314c06eef02980c716",
-              "url": "https://files.pythonhosted.org/packages/9d/19/59961b522e6757f0c9097e4493fa906031b95b3ebe9360b2c3083561a6b4/certifi-2023.5.7-py3-none-any.whl"
+              "hash": "92d6037539857d8206b8f6ae472e8b77db8058fec5937a1ef3f54304089edbb9",
+              "url": "https://files.pythonhosted.org/packages/4c/dd/2234eab22353ffc7d94e8d13177aaa050113286e93e7b40eae01fbf7c3d9/certifi-2023.7.22-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "0f0d56dc5a6ad56fd4ba36484d6cc34451e1c6548c61daad8c320169f91eddc7",
-              "url": "https://files.pythonhosted.org/packages/93/71/752f7a4dd4c20d6b12341ed1732368546bc0ca9866139fe812f6009d9ac7/certifi-2023.5.7.tar.gz"
+              "hash": "539cc1d13202e33ca466e88b2807e29f4c13049d6d87031a3c110744495cb082",
+              "url": "https://files.pythonhosted.org/packages/98/98/c2ff18671db109c9f10ed27f5ef610ae05b73bd876664139cf95bd1429aa/certifi-2023.7.22.tar.gz"
             }
           ],
           "project_name": "certifi",
           "requires_dists": [],
           "requires_python": ">=3.6",
-          "version": "2023.5.7"
+          "version": "2023.7.22"
         },
         {
           "artifacts": [
@@ -517,13 +517,13 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "616a7b3f5547a18f0312079d366c5c2ee237f7848f975f31ee185798d7471a68",
-              "url": "https://files.pythonhosted.org/packages/33/59/51ebfd83fac954b5609faf4df506ef811cb4c5b278d441eab774d6b0956c/era_5g_interface-0.4.1-py3-none-any.whl"
+              "hash": "d1795970155ba99605dc7da2d7f70cd12eb3e1f46b16eaaaf6518cb1b02c5556",
+              "url": "https://files.pythonhosted.org/packages/e2/f9/30ecec9255f8ef005713a9c8673284619fbc91be56c0086bceabf5ec56f0/era_5g_interface-0.5.0-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "bcff548252f833c536401b59e50c43b84f064d4efb1e7d67f407647626404d44",
-              "url": "https://files.pythonhosted.org/packages/c8/3b/73d6ea10c34b3d5888f2b876ce07b930d8f674db7a880c73f76f0f21224b/era_5g_interface-0.4.1.tar.gz"
+              "hash": "33c2a1b2264329427325b263a5d39f00e7005dfacfe31153b0d8051d7ddc2cf9",
+              "url": "https://files.pythonhosted.org/packages/f8/f5/f66f357cd8932df43ecd3844540ff4aad6c2e38b69661713145139770a12/era_5g_interface-0.5.0.tar.gz"
             }
           ],
           "project_name": "era-5g-interface",
@@ -534,7 +534,7 @@
             "types-requests==2.31.0.1"
           ],
           "requires_python": ">=3.8",
-          "version": "0.4.1"
+          "version": "0.5.0"
         },
         {
           "artifacts": [
@@ -661,28 +661,28 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "43dd0dfe331fb95767af581bf3b2781d7a72cf6560ddf2f55949fe547f3e5c9f",
-              "url": "https://files.pythonhosted.org/packages/34/7c/8a5043f362b0a55f07812a0db3f86092cdbd0fe41b933d7bc6fce3ab6c15/opencv_python-4.8.0.74-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+              "hash": "9bcb4944211acf13742dbfd9d3a11dc4e36353ffa1746f2c7dcd6a01c32d1376",
+              "url": "https://files.pythonhosted.org/packages/f5/d0/2e455d894ec0d6527e662ad55e70c04f421ad83a6fd0a54c3dd73c411282/opencv_python-4.8.0.76-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "038ba7075e55cb8e2846663ae970f0fb776a45b48ee69a887bf4ee15e2570083",
-              "url": "https://files.pythonhosted.org/packages/96/7b/9b3a72a6afa0f98035db324966404f2471489068617e2a781ace121f9615/opencv_python-4.8.0.74-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+              "hash": "93871871b1c9d6b125cddd45b0638a2fa01ee9fd37f5e428823f750e404f2f15",
+              "url": "https://files.pythonhosted.org/packages/1c/1f/e2fecc126554b84ddea6a159564f3ee21ae9ce52148d72e0d66d655a511c/opencv_python-4.8.0.76-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "66eadb5882ee56848b67f9fb57aadcaca2f4c9d9d00a0ef11043041925b51291",
-              "url": "https://files.pythonhosted.org/packages/b1/ca/69f7f2204d5779ad939123cce9735f76db8f50e2b482e45b413c585b0b27/opencv_python-4.8.0.74-cp37-abi3-macosx_11_0_arm64.whl"
+              "hash": "56d84c43ce800938b9b1ec74b33942b2edbcef3f70c2754eb9bfe5dff1ee3ace",
+              "url": "https://files.pythonhosted.org/packages/32/72/03747a6820bc970aeb0b89e653d1084068ac1ed606a83d8b5ac6fc237c14/opencv-python-4.8.0.76.tar.gz"
             },
             {
               "algorithm": "sha256",
-              "hash": "31d0d59fc8fdf703de4cec46c79b9f8d026fdde9d23d6e2e6a66809feeebbda9",
-              "url": "https://files.pythonhosted.org/packages/ec/30/9b24a6e7021447788fa89ae5c215fb5c17b893585ddc6ac553632cc1b761/opencv_python-4.8.0.74-cp37-abi3-macosx_10_16_x86_64.whl"
+              "hash": "48eb3121d809a873086d6677565e3ac963e6946110d13cd115533fa70e2aa2eb",
+              "url": "https://files.pythonhosted.org/packages/32/a6/4321f0f30ee11d6d85f49251d417f4e885fe7638b5ac50b7e3c80cccf141/opencv_python-4.8.0.76-cp37-abi3-macosx_11_0_arm64.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "009e3ce356a0cd2d7423723e00a32fd3d3cc5bb5970ed27a9a1f8a8f221d1db5",
-              "url": "https://files.pythonhosted.org/packages/fa/1d/990ad4eb4d385fabb2773170cf865977b6d5b558dd51459672f7cf7d1847/opencv-python-4.8.0.74.tar.gz"
+              "hash": "67bce4b9aad307c98a9a07c6afb7de3a4e823c1f4991d6d8e88e229e7dfeee59",
+              "url": "https://files.pythonhosted.org/packages/8a/6f/8aa049b66bcba8b5a4dc872ecfdbcd8603a96704b070fde22222e479c3d7/opencv_python-4.8.0.76-cp37-abi3-macosx_10_16_x86_64.whl"
             }
           ],
           "project_name": "opencv-python",
@@ -698,7 +698,7 @@
             "numpy>=1.23.5; python_version >= \"3.11\""
           ],
           "requires_python": ">=3.6",
-          "version": "4.8.0.74"
+          "version": "4.8.0.76"
         },
         {
           "artifacts": [
@@ -796,31 +796,31 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "5dbd1d2bef14efee43f5318b5d36d805a489f6600252bb53626d4bfafd95e27c",
-              "url": "https://files.pythonhosted.org/packages/08/6d/98b51f9776747e1e270919aa02298ce6a7d2d4d78a3349b47666deb61c4c/types_urllib3-1.26.25.13-py3-none-any.whl"
+              "hash": "9683bbb7fb72e32bfe9d2be6e04875fbe1b3eeec3cbb4ea231435aa7fd6b4f0e",
+              "url": "https://files.pythonhosted.org/packages/11/7b/3fc711b2efea5e85a7a0bbfe269ea944aa767bbba5ec52f9ee45d362ccf3/types_urllib3-1.26.25.14-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "3300538c9dc11dad32eae4827ac313f5d986b8b21494801f1bf97a1ac6c03ae5",
-              "url": "https://files.pythonhosted.org/packages/27/2a/cb418a2a03a31b8e0daea5e13edcc4ef1408ebb457f2cc833f1c3f30a0fa/types-urllib3-1.26.25.13.tar.gz"
+              "hash": "229b7f577c951b8c1b92c1bc2b2fdb0b49847bd2af6d1cc2a2e3dd340f3bda8f",
+              "url": "https://files.pythonhosted.org/packages/73/de/b9d7a68ad39092368fb21dd6194b362b98a1daeea5dcfef5e1adb5031c7e/types-urllib3-1.26.25.14.tar.gz"
             }
           ],
           "project_name": "types-urllib3",
           "requires_dists": [],
           "requires_python": null,
-          "version": "1.26.25.13"
+          "version": "1.26.25.14"
         },
         {
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "48e7fafa40319d358848e1bc6809b208340fafe2096f1725d05d67443d0483d1",
-              "url": "https://files.pythonhosted.org/packages/8a/03/ad9306a50d05c166e3456fe810f33cee2b8b2a7a6818ec5d4908c4ec6b36/urllib3-2.0.3-py3-none-any.whl"
+              "hash": "de7df1803967d2c2a98e4b11bb7d6bd9210474c46e8a0401514e3a42a75ebde4",
+              "url": "https://files.pythonhosted.org/packages/9b/81/62fd61001fa4b9d0df6e31d47ff49cfa9de4af03adecf339c7bc30656b37/urllib3-2.0.4-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "bee28b5e56addb8226c96f7f13ac28cb4c301dd5ea8a6ca179c0b9835e032825",
-              "url": "https://files.pythonhosted.org/packages/d6/af/3b4cfedd46b3addab52e84a71ab26518272c23c77116de3c61ead54af903/urllib3-2.0.3.tar.gz"
+              "hash": "8d22f86aae8ef5e410d4f539fde9ce6b2113a001bb4d189e0aed70642d602b11",
+              "url": "https://files.pythonhosted.org/packages/31/ab/46bec149bbd71a4467a3063ac22f4486ecd2ceb70ae8c70d5d8e4c2a7946/urllib3-2.0.4.tar.gz"
             }
           ],
           "project_name": "urllib3",
@@ -836,7 +836,7 @@
             "zstandard>=0.18.0; extra == \"zstd\""
           ],
           "requires_python": ">=3.7",
-          "version": "2.0.3"
+          "version": "2.0.4"
         },
         {
           "artifacts": [
@@ -871,10 +871,10 @@
   "pip_version": "20.3.4-patched",
   "prefer_older_binary": false,
   "requirements": [
-    "era-5g-interface~=0.4.1",
+    "era-5g-interface~=0.5.0",
     "numpy>=1.24.2",
     "opencv-python>=4.6.0.66",
-    "python-socketio>=5.8.0",
+    "python-socketio[client]>=5.8.0",
     "requests>=2.28.2",
     "types-requests==2.31.0.1",
     "websocket-client>=1.5.1"
