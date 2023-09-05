@@ -9,7 +9,7 @@
 //     "CPython>=3.8"
 //   ],
 //   "generated_with_requirements": [
-//     "era-5g-interface~=0.5.0",
+//     "era-5g-interface~=0.6.0",
 //     "numpy>=1.24.2",
 //     "opencv-python>=4.6.0.66",
 //     "python-socketio[client]>=5.8.0",
@@ -517,13 +517,13 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "d1795970155ba99605dc7da2d7f70cd12eb3e1f46b16eaaaf6518cb1b02c5556",
-              "url": "https://files.pythonhosted.org/packages/e2/f9/30ecec9255f8ef005713a9c8673284619fbc91be56c0086bceabf5ec56f0/era_5g_interface-0.5.0-py3-none-any.whl"
+              "hash": "9bbb46e8736a03c7fe8e91ee2a921f053651e27845277230a4b298c1b4a021c4",
+              "url": "https://files.pythonhosted.org/packages/9d/be/3a8f9906b542363db4dbdc5c6fc7a83f4cf646f6ec127497a7fe4a8edfb3/era_5g_interface-0.6.0-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "33c2a1b2264329427325b263a5d39f00e7005dfacfe31153b0d8051d7ddc2cf9",
-              "url": "https://files.pythonhosted.org/packages/f8/f5/f66f357cd8932df43ecd3844540ff4aad6c2e38b69661713145139770a12/era_5g_interface-0.5.0.tar.gz"
+              "hash": "46fddcfe4af6cdffe83d3ecb77d9a872aa045b699bad1e6758999c9acefbd98a",
+              "url": "https://files.pythonhosted.org/packages/38/73/8e23106dd6e222b5bff462d46616232825d7a6d4f184b3fe09cc09b49e9f/era_5g_interface-0.6.0.tar.gz"
             }
           ],
           "project_name": "era-5g-interface",
@@ -534,7 +534,7 @@
             "types-requests==2.31.0.1"
           ],
           "requires_python": ">=3.8",
-          "version": "0.5.0"
+          "version": "0.6.0"
         },
         {
           "artifacts": [
@@ -704,13 +704,13 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "67a675569f3e9bb274a8077f3c2068a8fe79cbfcb111cf31ca27b968484fe6c7",
-              "url": "https://files.pythonhosted.org/packages/c1/b5/e555067d8dd44b5bccbd17f1ca4fdadd2e4defbb0022a296030d76293d25/python_engineio-4.5.1-py3-none-any.whl"
+              "hash": "23b05b768d61c281104d8c69e069cea356b2e60aa982f718cdf1731719ce2803",
+              "url": "https://files.pythonhosted.org/packages/a7/66/039c705061d2f501fb837e7a0ee7bb1987560c3a14025d23c7ec7425de7b/python_engineio-4.7.0-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "b167a1b208fcdce5dbe96a61a6ca22391cfa6715d796c22de93e3adf9c07ae0c",
-              "url": "https://files.pythonhosted.org/packages/69/9e/a85b93a164b256ae7997c9b761ed160ec08f9f99f7b205646e660769b110/python-engineio-4.5.1.tar.gz"
+              "hash": "8b4f30ba58a5bff001801127227f44a1da0c0a22045f798c1a13ebb0d618e2a3",
+              "url": "https://files.pythonhosted.org/packages/48/81/9432274cde756b04a17ae6420639fe3190bcb09eb090dee546586be9aabb/python-engineio-4.7.0.tar.gz"
             }
           ],
           "project_name": "python-engineio",
@@ -721,31 +721,32 @@
             "websocket-client>=0.54.0; extra == \"client\""
           ],
           "requires_python": ">=3.6",
-          "version": "4.5.1"
+          "version": "4.7.0"
         },
         {
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "7adb8867aac1c2929b9c1429f1c02e12ca4c36b67c807967393e367dfbb01441",
-              "url": "https://files.pythonhosted.org/packages/5d/e9/f296186e2a91f1472b9da74346163411196dc1b17f425acf088f293b32cc/python_socketio-5.8.0-py3-none-any.whl"
+              "hash": "c20f12e4ed0cba57581af26bbeea9998bc2eeebb3b952fa92493a1e051cfe9dc",
+              "url": "https://files.pythonhosted.org/packages/2b/31/fd41960cf365177f323d8c10d774a0b017336556c6f0ba0a38403240914d/python_socketio-5.9.0-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "e714f4dddfaaa0cb0e37a1e2deef2bb60590a5b9fea9c343dd8ca5e688416fd9",
-              "url": "https://files.pythonhosted.org/packages/c6/4e/69e98ca93a7aa59b5e868afe54b133c7675828af710805ee5cde955fd732/python-socketio-5.8.0.tar.gz"
+              "hash": "dc42735f65534187f381fde291ebf620216a4960001370f32de940229b2e7f8f",
+              "url": "https://files.pythonhosted.org/packages/12/b5/5084ce6c772ee2f7d20714a116976cdb5d24c850745b1364d43e024e5a89/python-socketio-5.9.0.tar.gz"
             }
           ],
           "project_name": "python-socketio",
           "requires_dists": [
             "aiohttp>=3.4; extra == \"asyncio_client\"",
             "bidict>=0.21.0",
-            "python-engineio>=4.3.0",
+            "python-engineio>=4.7.0",
             "requests>=2.21.0; extra == \"client\"",
+            "sphinx; extra == \"docs\"",
             "websocket-client>=0.54.0; extra == \"client\""
           ],
           "requires_python": ">=3.6",
-          "version": "5.8.0"
+          "version": "5.9.0"
         },
         {
           "artifacts": [
@@ -842,25 +843,25 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "f1f9f2ad5291f0225a49efad77abf9e700b6fef553900623060dad6e26503b9d",
-              "url": "https://files.pythonhosted.org/packages/d3/a3/63e9329c8cc9be6153e919e17d0ef5b60d537fed78564872951b95bcc17c/websocket_client-1.6.1-py3-none-any.whl"
+              "hash": "ce54f419dfae71f4bdba69ebe65bf7f0a93fe71bc009ad3a010aacc3eebad537",
+              "url": "https://files.pythonhosted.org/packages/4b/4a/3176388095e5bae6e6a1fbee66c438809230ae0196e7de4af12c5e75c509/websocket_client-1.6.2-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "c951af98631d24f8df89ab1019fc365f2227c0892f12fd150e935607c79dd0dd",
-              "url": "https://files.pythonhosted.org/packages/b1/34/3a5cae1e07d9566ad073fa6d169bf22c03a3ba7b31b3c3422ec88d039108/websocket-client-1.6.1.tar.gz"
+              "hash": "53e95c826bf800c4c465f50093a8c4ff091c7327023b10bfaff40cf1ef170eaa",
+              "url": "https://files.pythonhosted.org/packages/38/44/d747807b707465625ba5e18371bc7c448925314d7217ced1801162b74ca6/websocket-client-1.6.2.tar.gz"
             }
           ],
           "project_name": "websocket-client",
           "requires_dists": [
-            "Sphinx>=3.4; extra == \"docs\"",
+            "Sphinx>=6.0; extra == \"docs\"",
             "python-socks; extra == \"optional\"",
-            "sphinx-rtd-theme>=0.5; extra == \"docs\"",
+            "sphinx-rtd-theme>=1.1.0; extra == \"docs\"",
             "websockets; extra == \"test\"",
             "wsaccel; extra == \"optional\""
           ],
-          "requires_python": ">=3.7",
-          "version": "1.6.1"
+          "requires_python": ">=3.8",
+          "version": "1.6.2"
         }
       ],
       "platform_tag": null
@@ -871,7 +872,7 @@
   "pip_version": "20.3.4-patched",
   "prefer_older_binary": false,
   "requirements": [
-    "era-5g-interface~=0.5.0",
+    "era-5g-interface~=0.6.0",
     "numpy>=1.24.2",
     "opencv-python>=4.6.0.66",
     "python-socketio[client]>=5.8.0",
