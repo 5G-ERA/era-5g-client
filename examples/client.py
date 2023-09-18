@@ -3,8 +3,6 @@ import os
 import signal
 import time
 import traceback
-from types import FrameType
-from typing import Optional
 
 import cv2
 
@@ -58,7 +56,7 @@ def main() -> None:
 
     logging.getLogger().setLevel(logging.INFO)
 
-    def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
+    def signal_handler(sig: int, *_) -> None:
         logging.info(f"Terminating ({signal.Signals(sig).name})...")
         global stopped
         stopped = True

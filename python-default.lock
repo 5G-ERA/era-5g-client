@@ -540,6 +540,26 @@
           "artifacts": [
             {
               "algorithm": "sha256",
+              "hash": "e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761",
+              "url": "https://files.pythonhosted.org/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d",
+              "url": "https://files.pythonhosted.org/packages/f5/38/3af3d3633a34a3316095b39c8e8fb4853a28a536e55d347bd8d8e9a14b03/h11-0.14.0.tar.gz"
+            }
+          ],
+          "project_name": "h11",
+          "requires_dists": [
+            "typing-extensions; python_version < \"3.8\""
+          ],
+          "requires_python": ">=3.7",
+          "version": "0.14.0"
+        },
+        {
+          "artifacts": [
+            {
+              "algorithm": "sha256",
               "hash": "90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2",
               "url": "https://files.pythonhosted.org/packages/fc/34/3030de6f1370931b9dbb4dad48f6ab1015ab1d32447850b9fc94e60097be/idna-3.4-py3-none-any.whl"
             },
@@ -704,24 +724,25 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "23b05b768d61c281104d8c69e069cea356b2e60aa982f718cdf1731719ce2803",
-              "url": "https://files.pythonhosted.org/packages/a7/66/039c705061d2f501fb837e7a0ee7bb1987560c3a14025d23c7ec7425de7b/python_engineio-4.7.0-py3-none-any.whl"
+              "hash": "52499e8ab94fea1a6525ffe872fe7028d04b575799c5fa8e2cf7880e032de42e",
+              "url": "https://files.pythonhosted.org/packages/b3/69/1e5985404fdc7873cef612ae7451ba5d3c00b2daa0aa1d9a4f6a5265532a/python_engineio-4.7.1-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "8b4f30ba58a5bff001801127227f44a1da0c0a22045f798c1a13ebb0d618e2a3",
-              "url": "https://files.pythonhosted.org/packages/48/81/9432274cde756b04a17ae6420639fe3190bcb09eb090dee546586be9aabb/python-engineio-4.7.0.tar.gz"
+              "hash": "a8422e345cd9a21451303380b160742ff02197975b1c3a02cef115febe2b1b20",
+              "url": "https://files.pythonhosted.org/packages/42/47/e7700d320c633191e86b516c8aa535e2fafdd3cd2020ed44ef0eb4d546b6/python-engineio-4.7.1.tar.gz"
             }
           ],
           "project_name": "python-engineio",
           "requires_dists": [
             "aiohttp>=3.4; extra == \"asyncio_client\"",
             "requests>=2.21.0; extra == \"client\"",
+            "simple-websocket>=0.10.0",
             "sphinx; extra == \"docs\"",
             "websocket-client>=0.54.0; extra == \"client\""
           ],
           "requires_python": ">=3.6",
-          "version": "4.7.0"
+          "version": "4.7.1"
         },
         {
           "artifacts": [
@@ -772,6 +793,26 @@
           ],
           "requires_python": ">=3.7",
           "version": "2.31.0"
+        },
+        {
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "62c36bacfd75cc867927bb39d91951342a7234bdfe20f41dd969a3b8bb1413b7",
+              "url": "https://files.pythonhosted.org/packages/f6/00/6583d44c59b765c01a14e69260d90c3ca489a47ac8ffc9f1ddf81f1d25f5/simple_websocket-0.10.1-py3-none-any.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "0ab46c8ffa51a46dc95eed94608b3b722841c0bf849def71d465c5c356679c82",
+              "url": "https://files.pythonhosted.org/packages/83/32/873782daaed90ec068948e6de8fb3b527d357642cf4a7948a9a1a7243c7a/simple-websocket-0.10.1.tar.gz"
+            }
+          ],
+          "project_name": "simple-websocket",
+          "requires_dists": [
+            "wsproto"
+          ],
+          "requires_python": ">=3.6",
+          "version": "0.10.1"
         },
         {
           "artifacts": [
@@ -843,13 +884,13 @@
           "artifacts": [
             {
               "algorithm": "sha256",
-              "hash": "ce54f419dfae71f4bdba69ebe65bf7f0a93fe71bc009ad3a010aacc3eebad537",
-              "url": "https://files.pythonhosted.org/packages/4b/4a/3176388095e5bae6e6a1fbee66c438809230ae0196e7de4af12c5e75c509/websocket_client-1.6.2-py3-none-any.whl"
+              "hash": "6cfc30d051ebabb73a5fa246efdcc14c8fbebbd0330f8984ac3bb6d9edd2ad03",
+              "url": "https://files.pythonhosted.org/packages/0b/50/49e0d7342e5d441d43b525d6c84656ea40aea3e58d530004d07b22bc9b04/websocket_client-1.6.3-py3-none-any.whl"
             },
             {
               "algorithm": "sha256",
-              "hash": "53e95c826bf800c4c465f50093a8c4ff091c7327023b10bfaff40cf1ef170eaa",
-              "url": "https://files.pythonhosted.org/packages/38/44/d747807b707465625ba5e18371bc7c448925314d7217ced1801162b74ca6/websocket-client-1.6.2.tar.gz"
+              "hash": "3aad25d31284266bcfcfd1fd8a743f63282305a364b8d0948a43bd606acc652f",
+              "url": "https://files.pythonhosted.org/packages/44/34/551f30cbdc0515c39c2e78ef5919615785cd370844e40ada82367c1fab3f/websocket-client-1.6.3.tar.gz"
             }
           ],
           "project_name": "websocket-client",
@@ -861,7 +902,27 @@
             "wsaccel; extra == \"optional\""
           ],
           "requires_python": ">=3.8",
-          "version": "1.6.2"
+          "version": "1.6.3"
+        },
+        {
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "b9acddd652b585d75b20477888c56642fdade28bdfd3579aa24a4d2c037dd736",
+              "url": "https://files.pythonhosted.org/packages/78/58/e860788190eba3bcce367f74d29c4675466ce8dddfba85f7827588416f01/wsproto-1.2.0-py3-none-any.whl"
+            },
+            {
+              "algorithm": "sha256",
+              "hash": "ad565f26ecb92588a3e43bc3d96164de84cd9902482b130d0ddbaa9664a85065",
+              "url": "https://files.pythonhosted.org/packages/c9/4a/44d3c295350d776427904d73c189e10aeae66d7f555bb2feee16d1e4ba5a/wsproto-1.2.0.tar.gz"
+            }
+          ],
+          "project_name": "wsproto",
+          "requires_dists": [
+            "h11<1,>=0.9.0"
+          ],
+          "requires_python": ">=3.7.0",
+          "version": "1.2.0"
         }
       ],
       "platform_tag": null

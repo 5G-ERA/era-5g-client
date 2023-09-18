@@ -1,9 +1,9 @@
-import base64
 import logging
+import statistics
 import time
 from collections.abc import Callable
 from dataclasses import asdict
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import cv2
 import numpy as np
@@ -31,20 +31,21 @@ class NetAppClientBase:
         control_cmd_error_event: Optional[Callable] = None,
         logging_level: int = logging.INFO,
         socketio_debug: bool = False,
+        stats: bool = False,
     ) -> None:
         """Constructor.
 
         Args:
 
             results_event (Callable): Callback where results will arrive.
-            image_error_event (Callable, optional): Callback which is emited when server
+            image_error_event (Callable, optional): Callback which is emitted when server
                 failed to process the incoming image.
-            json_error_event (Callable, optional): Callback which is emited when server
+            json_error_event (Callable, optional): Callback which is emitted when server
                 failed to process the incoming json data.
             control_cmd_event (Callable, optional): Callback for receiving data that are
                 sent as a result of performing a control command (e.g. NetApp state
                 obtained by get-state command).
-            control_cmd_error_event (Callable, optional): Callback which is emited when
+            control_cmd_error_event (Callable, optional): Callback which is emitted when
                 server failed to process the incoming control command.
 
         Raises:
@@ -70,6 +71,9 @@ class NetAppClientBase:
         self._control_cmd_error_event = control_cmd_error_event
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
+        self.stats = stats
+        if self.stats:
+            self.sizes: List[int] = []
 
     def register(
         self,
@@ -92,7 +96,7 @@ class NetAppClientBase:
                 with the Network Application until it is available. Defaults to False.
             wait_timeout: How long the client will try to connect to network application.
                 Only used if wait_until_available is True. If negative, the client
-                will waits indefinitely. Defaults to -1.
+                will wait indefinitely. Defaults to -1.
 
         Raises:
             FailedToConnect: _description_
@@ -117,7 +121,7 @@ class NetAppClientBase:
                 self.logger.debug(f"Failed to connect: {ex}")
                 if not wait_until_available or (wait_timeout > 0 and start_time + wait_timeout < time.time()):
                     raise FailedToConnect(ex)
-                self.logger.warn("Failed to connect to network application. Retrying in 1 second.")
+                self.logger.warning("Failed to connect to network application. Retrying in 1 second.")
                 time.sleep(1)
 
         self.logger.info(f"Client connected to namespaces: {namespaces_to_connect}")
@@ -135,6 +139,14 @@ class NetAppClientBase:
     def disconnect(self) -> None:
         """Disconnects the WebSocket connection."""
         self._sio.disconnect()
+        if self.stats:
+            self.logger.info(
+                f"Transferred bytes sum: {sum(self.sizes)} "
+                f"median: {statistics.median(self.sizes)} "
+                f"mean: {statistics.mean(self.sizes)} "
+                f"min: {min(self.sizes)} "
+                f"max: {max(self.sizes)} "
+            )
 
     def wait(self) -> None:
         """Blocking infinite waiting."""
@@ -166,8 +178,10 @@ class NetAppClientBase:
                 frame_encoded = self.h264_encoder.encode_ndarray(frame)
             else:
                 _, frame_jpeg = cv2.imencode(".jpg", frame)
-                # TODO: check why type: ignore is needed for next line
-                frame_encoded = base64.b64encode(frame_jpeg)  # type: ignore
+                frame_encoded = frame_jpeg.tobytes()
+            if self.stats:
+                self.sizes.append(len(frame_encoded))
+                self.logger.debug(f"Frame data size: {self.sizes[-1]}")
             data = {"timestamp": timestamp, "frame": frame_encoded}
             if metadata:
                 data["metadata"] = metadata

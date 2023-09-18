@@ -65,10 +65,8 @@ Basic configuration needs to be provided:
 System environment variables that can be set, e.g.:
 
 ```
-# ip address or hostname of the computer, where the NetApp is deployed
-export NETAPP_ADDRESS=127.0.0.1
-# port of the NetApp's server (default is 5896)
-export NETAPP_PORT=5897
+# ip address or hostname and port (default is 5896) of the computer, where the NetApp is deployed
+export NETAPP_ADDRESS=http://localhost:5896
 ```
 
 ```bash

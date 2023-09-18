@@ -3,8 +3,7 @@ import os
 import signal
 import time
 import traceback
-from types import FrameType
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import cv2
 
@@ -48,7 +47,7 @@ def main() -> None:
     global stopped
     stopped = False
 
-    def signal_handler(sig: int, frame: Optional[FrameType]) -> None:
+    def signal_handler(sig: int, *_) -> None:
         global stopped
         stopped = True
         print(f"Terminating ({signal.Signals(sig).name})...")
