@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 import cv2
 import numpy as np
 import socketio
+import ujson
 from socketio.exceptions import ConnectionError
 
 from era_5g_client.exceptions import FailedToConnect
@@ -54,7 +55,7 @@ class NetAppClientBase:
             FailedToObtainPlan: When the plan was not successfully returned from
                 the middleware
         """
-        self._sio = socketio.Client(logger=socketio_debug, reconnection_attempts=1, handle_sigint=False)
+        self._sio = socketio.Client(logger=socketio_debug, reconnection_attempts=1, handle_sigint=False, json=ujson)
         self.netapp_address: Union[str, None] = None
         self._sio.on("message", results_event, namespace="/results")
         self._sio.on("connect", self.on_connect_event, namespace="/results")
