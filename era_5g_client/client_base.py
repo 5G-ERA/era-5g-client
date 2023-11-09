@@ -11,7 +11,7 @@ import socketio
 import ujson
 from socketio.exceptions import ConnectionError
 
-from era_5g_client.exceptions import FailedToConnect
+from era_5g_client.exceptions import BackPressureException, FailedToConnect
 from era_5g_interface.dataclasses.control_command import ControlCmdType, ControlCommand
 from era_5g_interface.h264_encoder import H264Encoder, H264EncoderError
 
@@ -33,6 +33,7 @@ class NetAppClientBase:
         logging_level: int = logging.INFO,
         socketio_debug: bool = False,
         stats: bool = False,
+        back_pressure_size: Optional[int] = 5,
     ) -> None:
         """Constructor.
 
@@ -73,6 +74,11 @@ class NetAppClientBase:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
         self.stats = stats
+
+        if back_pressure_size is not None and back_pressure_size < 1:
+            raise ValueError("Invalid value for back_pressure_size.")
+
+        self.back_pressure_size = back_pressure_size
         if self.stats:
             self.sizes: List[int] = []
 
@@ -163,7 +169,11 @@ class NetAppClientBase:
         self.disconnect()
 
     def send_image_ws(
-        self, frame: np.ndarray, timestamp: Optional[int] = None, metadata: Optional[Dict[str, Any]] = None
+        self,
+        frame: np.ndarray,
+        timestamp: Optional[int] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        can_be_dropped=True,
     ):
         """Encodes the image frame to the jpg or h264 format and sends it over
         the websocket, to the /data namespace.
@@ -172,6 +182,7 @@ class NetAppClientBase:
             frame (np.ndarray): Image frame
             timestamp (Optional[int], optional): Frame timestamp
             metadata (Optional[str], optional): Optional metadata
+            can_be_dropped: if data can be lost due to back pressure
         """
 
         try:
@@ -186,31 +197,37 @@ class NetAppClientBase:
             data = {"timestamp": timestamp, "frame": frame_encoded}
             if metadata:
                 data["metadata"] = metadata
-            self._sio.emit("image", data, "/data")
+            # TODO for h264 the back pressure is disabled now - make it able to drop non-key frames
+            self.send_image_ws_raw(data, can_be_dropped and self.h264_encoder is None)
         except H264EncoderError as e:
             self.logger.error(f"H264 encoder error: {e}")
             self.disconnect()
             raise e
-        except Exception as e:
-            # TODO: Create recovery sequence if server goes down and then starts up again
-            self.logger.error(f"Send image emit error: {e}")
-            self.disconnect()
-            raise e
 
-    def send_image_ws_raw(self, data: Dict[str, Any]) -> None:
+    def _apply_back_pressure(self) -> None:
+        if self.back_pressure_size is not None and self._sio.eio.queue.qsize() > self.back_pressure_size:
+            raise BackPressureException()
+
+    def send_image_ws_raw(self, data: Dict[str, Any], can_be_dropped=True) -> None:
         """Sends already encoded image data to /data namespace.
 
         Args:
             data (Dict): _description_
+            can_be_dropped: if data can be lost due to back pressure
         """
+        if can_be_dropped:
+            self._apply_back_pressure()
         self._sio.emit("image", data, "/data")
 
-    def send_json_ws(self, json: Dict[str, Any]) -> None:
+    def send_json_ws(self, json: Dict[str, Any], can_be_dropped=True) -> None:
         """Sends netapp-specific json data using the websockets.
 
         Args:
             json (dict): Json data in the form of Python dictionary
+            can_be_dropped: if data can be lost due to back pressure
         """
+        if can_be_dropped:
+            self._apply_back_pressure()
         self._sio.emit("json", json, "/data")
 
     def send_control_command(self, control_command: ControlCommand) -> None:

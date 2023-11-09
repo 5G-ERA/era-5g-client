@@ -7,3 +7,5 @@ types-requests==2.31.0.1
 era-5g-interface~=0.6.0
 ujson~=5.8.0
 types-ujson~=5.8.0.1
+flask_socketio==5.3.*
+flask==2.2.*

@@ -24,3 +24,7 @@ class NetAppNotReady(Era5gClientException):
 
 class FailedToSendData(Era5gClientException):
     """Raised when the data could not be send."""
+
+
+class BackPressureException(Era5gClientException):
+    """Raised when sending too much data (output buffer too filled)."""
