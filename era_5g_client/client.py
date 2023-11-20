@@ -30,7 +30,6 @@ class NetAppClient(NetAppClientBase):
 
     def __init__(
         self,
-        results_event: Callable,
         image_error_event: Optional[Callable] = None,
         json_error_event: Optional[Callable] = None,
         control_cmd_event: Optional[Callable] = None,
@@ -41,7 +40,6 @@ class NetAppClient(NetAppClientBase):
         """Constructor.
 
         Args:
-            results_event (Callable): Callback where results will arrive.
             image_error_event (Callable, optional): Callback which is emitted when server
                 failed to process the incoming image.
             json_error_event (Callable, optional): Callback which is emitted when server
@@ -60,7 +58,6 @@ class NetAppClient(NetAppClientBase):
         """
 
         super().__init__(
-            results_event,
             image_error_event,
             json_error_event,
             control_cmd_event,
@@ -240,9 +237,8 @@ class NetAppClient(NetAppClientBase):
                 "LockResourceReUse": resource_lock,
                 "RobotId": robot_id,
             }
-            response = requests.post(
-                self.middleware_info.build_api_endpoint("Task/Plan"), json=data, headers=hed
-            ).json()
+            r = requests.post(self.middleware_info.build_api_endpoint("Task/Plan"), json=data, headers=hed)
+            response = r.json()
             if not isinstance(response, dict):
                 raise FailedToConnect("Invalid response.")
 

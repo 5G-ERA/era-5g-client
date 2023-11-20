@@ -25,7 +25,6 @@ class NetAppClientBase:
 
     def __init__(
         self,
-        results_event: Callable,
         image_error_event: Optional[Callable] = None,
         json_error_event: Optional[Callable] = None,
         control_cmd_event: Optional[Callable] = None,
@@ -58,11 +57,8 @@ class NetAppClientBase:
         """
         self._sio = socketio.Client(logger=socketio_debug, reconnection_attempts=1, handle_sigint=False, json=ujson)
         self.netapp_address: Union[str, None] = None
-        self._sio.on("message", results_event, namespace="/results")
-        self._sio.on("connect", self.on_connect_event, namespace="/results")
         self._sio.on("image_error", image_error_event, namespace="/data")
         self._sio.on("json_error", json_error_event, namespace="/data")
-        self._sio.on("connect_error", self.on_connect_error, namespace="/results")
         self._sio.on("control_cmd_result", control_cmd_event, namespace="/control")
         self._sio.on("control_cmd_error", control_cmd_error_event, namespace="/control")
         self._session_cookie: Optional[str] = None
@@ -113,7 +109,7 @@ class NetAppClientBase:
         """
 
         self.netapp_address = netapp_address
-        namespaces_to_connect = ["/data", "/control", "/results"]
+        namespaces_to_connect = ["/data", "/control"]
         start_time = time.time()
         while True:
             try:
