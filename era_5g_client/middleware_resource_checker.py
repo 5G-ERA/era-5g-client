@@ -8,11 +8,25 @@ from requests import HTTPError
 
 from era_5g_client.exceptions import FailedToConnect
 
+logger = logging.getLogger(__name__)
+
 
 class MiddlewareResourceChecker(Thread):
+    """Class for checking Middleware resources."""
+
     def __init__(
         self, token: str, action_plan_id: str, status_endpoint: str, state_callback: Optional[Callable] = None, **kw
     ) -> None:
+        """Constructor.
+
+        Args:
+            token (str): Login token.
+            action_plan_id (str): Action plan ID.
+            status_endpoint (str): Status endpoint.
+            state_callback (Callable, optional): Optional state callback.
+            **kw: Thread arguments.
+        """
+
         super().__init__(**kw)
         self.stop_event = Event()
         self.token = token
@@ -24,9 +38,16 @@ class MiddlewareResourceChecker(Thread):
         self.url: Optional[str] = None
 
     def stop(self) -> None:
+        """Stop thread."""
+
         self.stop_event.set()
 
     def run(self) -> None:
+        """Run thread.
+
+        Check resource status in loop.
+        """
+
         while not self.stop_event.is_set():
             resource_state = self.get_resource_status()
 
@@ -44,21 +65,37 @@ class MiddlewareResourceChecker(Thread):
             time.sleep(0.5)  # TODO: adjust or use something similar to rospy.rate.sleep()
 
     def get_resource_status(self) -> Dict:
-        try:  # query orchestrator for latest information regarding the status of resources.
-            hed = {"Authorization": "Bearer " + str(self.token)}
-            url = f"{self.status_endpoint}/{str(self.action_plan_id)}"
-            response = requests.get(url, headers=hed)
-            resp = response.json()
-            if isinstance(resp, dict):
-                return resp
-            else:
-                raise FailedToConnect("Invalid response.")
+        """Get resource status.
 
+        Returns:
+            resource status in dictionary.
+        """
+
+        hed = {"Authorization": "Bearer " + str(self.token)}
+        url = f"{self.status_endpoint}/{str(self.action_plan_id)}"
+
+        try:  # Query orchestrator for latest information regarding the status of resources.
+            response = requests.get(url, headers=hed)
         except HTTPError as e:
-            print(e.response.status_code)
-            raise FailedToConnect("Could not get the resource status, revisit the log files for more details.")
+            if e.response:
+                logger.debug(e.response.status_code)
+            else:
+                logger.debug(e)
+            raise FailedToConnect(f"Could not get the resource status, revisit the log files for more details. {e}")
+
+        resp = response.json()
+        if isinstance(resp, dict):
+            return resp
+        else:
+            raise FailedToConnect("Invalid response.")
 
     def wait_until_resource_ready(self, timeout: int = -1) -> None:
+        """Wait until resource is ready.
+
+        Args:
+            timeout (int): Timeout - unused.
+        """
+
         while not self.stop_event.is_set():
             # if timeout < 0 and time.time() < timeout:
             #    raise TimeoutError
@@ -68,4 +105,10 @@ class MiddlewareResourceChecker(Thread):
             time.sleep(0.1)
 
     def is_ready(self) -> bool:
+        """Is resource ready?
+
+        Returns:
+            Ready status.
+        """
+
         return self.status == "Active"

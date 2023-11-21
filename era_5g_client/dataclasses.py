@@ -3,20 +3,22 @@ from dataclasses import dataclass
 
 @dataclass
 class MiddlewareInfo:
-    # The IP or hostname of the middleware
+    """Middleware info class."""
+
+    # The IP or hostname of the middleware.
     address: str
-    # The middleware user's id
+    # The middleware user's ID.
     user_id: str
-    # The middleware user's password
+    # The middleware user's password.
     password: str
 
     def build_api_endpoint(self, path: str) -> str:
         """Builds an API endpoint on the middleware.
 
         Args:
-            path (str): endpoint path
+            path (str): Endpoint path.
         Returns:
-            _type_: complete URI to requested endpoint
+            str: Complete URI to requested endpoint.
         """
 
         return f"http://{self.address}/{path}"

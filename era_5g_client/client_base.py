@@ -3,84 +3,108 @@ import statistics
 import time
 from collections.abc import Callable
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
-import cv2
-import numpy as np
 import socketio
 import ujson
 from socketio.exceptions import ConnectionError
 
-from era_5g_client.exceptions import BackPressureException, FailedToConnect
+from era_5g_client.exceptions import FailedToConnect, FailedToInitialize
+from era_5g_interface.channels import (
+    COMMAND_ERROR_EVENT,
+    COMMAND_EVENT,
+    COMMAND_RESULT_EVENT,
+    CONTROL_NAMESPACE,
+    DATA_NAMESPACE,
+    CallbackInfoClient,
+)
+from era_5g_interface.client_channels import ClientChannels
 from era_5g_interface.dataclasses.control_command import ControlCmdType, ControlCommand
-from era_5g_interface.h264_encoder import H264Encoder, H264EncoderError
 
 
 class NetAppClientBase:
-    """Basic implementation of the NetApp client.
+    """Basic implementation of the 5G-ERA Network Application client.
 
-    It creates the Requests object with session and bind callbacks for
-    connection info and results from the NetApp.
+    It creates websocket connection and bind callbacks from the 5G-ERA Network Application.
+    How to send data? E.g.:
+        client.send_image(frame, "image", ChannelType.H264, timestamp, encoding_options=h264_options)
+        client.send_image(frame, "image", ChannelType.JPEG, timestamp, metadata)
+        client.send_data({"message": "message text"}, "event_name")
+    How to create callbacks_info? E.g.:
+        {
+            "results": CallbackInfoClient(ChannelType.JSON, results_callback),
+            "image": CallbackInfoClient(ChannelType.H264, image_callback, error_callback)
+        }
+    Callbacks have data parameter: e.g. def image_callback(data: Dict[str, Any]):
+    Image data dict including decoded frame (data["frame"]) and send timestamp (data["timestamp"]).
     """
 
     def __init__(
         self,
-        results_event: Callable,
-        image_error_event: Optional[Callable] = None,
-        json_error_event: Optional[Callable] = None,
-        control_cmd_event: Optional[Callable] = None,
-        control_cmd_error_event: Optional[Callable] = None,
+        callbacks_info=Dict[str, CallbackInfoClient],
+        command_result_callback: Optional[Callable] = None,
+        command_error_callback: Optional[Callable] = None,
         logging_level: int = logging.INFO,
         socketio_debug: bool = False,
         stats: bool = False,
         back_pressure_size: Optional[int] = 5,
+        recreate_h264_attempts_count: int = 5,
     ) -> None:
         """Constructor.
 
         Args:
-
-            results_event (Callable): Callback where results will arrive.
-            image_error_event (Callable, optional): Callback which is emitted when server
-                failed to process the incoming image.
-            json_error_event (Callable, optional): Callback which is emitted when server
-                failed to process the incoming json data.
-            control_cmd_event (Callable, optional): Callback for receiving data that are
-                sent as a result of performing a control command (e.g. NetApp state
-                obtained by get-state command).
-            control_cmd_error_event (Callable, optional): Callback which is emitted when
-                server failed to process the incoming control command.
-
-        Raises:
-            FailedToConnect: When connection to the middleware could not be set or
-                login failed
-            FailedToObtainPlan: When the plan was not successfully returned from
-                the middleware
+            callbacks_info (Dict[str, CallbackInfoClient]): Callbacks Info dictionary, key is custom event name.
+                Example: {"results": CallbackInfoClient(ChannelType.JSON, results_callback)}.
+            command_result_callback (Callable, optional): Callback for receiving data that are sent as a result of
+                performing a control command (e.g. 5G-ERA Network Application state obtained by get-state command).
+            command_error_callback (Callable, optional): Callback which is emitted when server failed to process the
+                incoming control command.
+            logging_level (int): Logging level.
+            socketio_debug (bool): Socket.IO debug flag.
+            stats (bool): Store output data sizes.
+            back_pressure_size (int, optional): Back pressure size - max size of eio.queue.qsize().
+            recreate_h264_attempts_count (int): How many times try to recreate the H.264 encoder/decoder.
         """
+
+        # Create Socket.IO Client.
         self._sio = socketio.Client(logger=socketio_debug, reconnection_attempts=1, handle_sigint=False, json=ujson)
-        self.netapp_address: Union[str, None] = None
-        self._sio.on("message", results_event, namespace="/results")
-        self._sio.on("connect", self.on_connect_event, namespace="/results")
-        self._sio.on("image_error", image_error_event, namespace="/data")
-        self._sio.on("json_error", json_error_event, namespace="/data")
-        self._sio.on("connect_error", self.on_connect_error, namespace="/results")
-        self._sio.on("control_cmd_result", control_cmd_event, namespace="/control")
-        self._sio.on("control_cmd_error", control_cmd_error_event, namespace="/control")
-        self._session_cookie: Optional[str] = None
-        self.h264_encoder: Optional[H264Encoder] = None
-        self._image_error_event = image_error_event
-        self._json_error_event = json_error_event
-        self._control_cmd_event = control_cmd_event
-        self._control_cmd_error_event = control_cmd_error_event
+
+        # Register connect, disconnect a connect error callbacks.
+        self._sio.on("connect", self.data_connect_callback, namespace=DATA_NAMESPACE)
+        self._sio.on("connect", self.control_connect_callback, namespace=CONTROL_NAMESPACE)
+        self._sio.on("disconnect", self.data_disconnect_callback, namespace=DATA_NAMESPACE)
+        self._sio.on("disconnect", self.control_disconnect_callback, namespace=CONTROL_NAMESPACE)
+        self._sio.on("connect_error", self.data_connect_error_callback, namespace=DATA_NAMESPACE)
+        self._sio.on("connect_error", self.control_connect_error_callback, namespace=CONTROL_NAMESPACE)
+
+        # Register custom callbacks for command results and errors.
+        self._sio.on(COMMAND_RESULT_EVENT, command_result_callback, namespace=CONTROL_NAMESPACE)
+        self._sio.on(COMMAND_ERROR_EVENT, command_error_callback, namespace=CONTROL_NAMESPACE)
+
+        # Create channels - custom callbacks and send functions including encoding.
+        # NOTE: DATA_NAMESPACE is assumed to be or will be a connected namespace.
+        self._channels = ClientChannels(
+            self._sio,
+            callbacks_info=callbacks_info,
+            back_pressure_size=back_pressure_size,
+            recreate_h264_attempts_count=recreate_h264_attempts_count,
+            stats=stats,
+        )
+
+        # Save custom command callbacks.
+        self._command_result_callback = command_result_callback
+        self._command_error_callback = command_error_callback
+
+        # Set logger.
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_level)
-        self.stats = stats
 
-        if back_pressure_size is not None and back_pressure_size < 1:
-            raise ValueError("Invalid value for back_pressure_size.")
+        # Init 5G-ERA Network Application address member.
+        self.netapp_address: Union[str, None] = None
 
-        self.back_pressure_size = back_pressure_size
-        if self.stats:
-            self.sizes: List[int] = []
+        # Substitute send function calls.
+        self.send_image = self._channels.send_image
+        self.send_data = self._channels.send_data
 
     def register(
         self,
@@ -89,31 +113,30 @@ class NetAppClientBase:
         wait_until_available: bool = False,
         wait_timeout: int = -1,
     ) -> None:
-        """Calls the /register endpoint of the NetApp interface and if the
-        registration is successful, it sets up the WebSocket connection for
-        results retrieval.
+        """Calls the /register endpoint of the 5G-ERA Network Application server and if the registration is successful,
+        it sets up the WebSocket connection for results retrieval.
 
         Args:
-            netapp_address (str): The URL of the network application interface,
-                including the scheme and optionally port and path to the interface,
-                e.g. http://localhost:80 or http://gateway/path_to_interface
-            args (Optional[Dict], optional): Optional parameters to be passed to
-            the NetApp, in the form of dict. Defaults to None.
-            wait_until_available: If True, the client will repeatedly try to register
-                with the Network Application until it is available. Defaults to False.
-            wait_timeout: How long the client will try to connect to network application.
-                Only used if wait_until_available is True. If negative, the client
-                will wait indefinitely. Defaults to -1.
+            netapp_address (str): The URL of the 5G-ERA Network Application server, including the scheme and optionally
+                port and path to the interface, e.g. http://localhost:80 or http://gateway/path_to_interface.
+            args (Dict, optional): Optional parameters to be passed to the 5G-ERA Network Application, in the form of
+                dict. Defaults to None.
+            wait_until_available: If True, the client will repeatedly try to register with the Network Application
+                until it is available. Defaults to False.
+            wait_timeout: How long the client will try to connect to network application. Only used if
+                wait_until_available is True. If negative, the client will wait indefinitely. Defaults to -1.
 
         Raises:
-            FailedToConnect: _description_
+            FailedToConnect: Failed to connect to network application exception.
+            FailedToInitialize: Failed to initialize the network application.
 
         Returns:
-            Response: response from the NetApp.
+            Response: response from the 5G-ERA Network Application.
         """
 
+        # Connect to server
         self.netapp_address = netapp_address
-        namespaces_to_connect = ["/data", "/control", "/results"]
+        namespaces_to_connect = [DATA_NAMESPACE, CONTROL_NAMESPACE]
         start_time = time.time()
         while True:
             try:
@@ -125,7 +148,7 @@ class NetAppClientBase:
                 )
                 break
             except ConnectionError as ex:
-                self.logger.debug(f"Failed to connect: {ex}")
+                self.logger.debug(f"Failed to connect: {repr(ex)}")
                 if not wait_until_available or (wait_timeout > 0 and start_time + wait_timeout < time.time()):
                     raise FailedToConnect(ex)
                 self.logger.warning("Failed to connect to network application. Retrying in 1 second.")
@@ -133,108 +156,81 @@ class NetAppClientBase:
 
         self.logger.info(f"Client connected to namespaces: {namespaces_to_connect}")
 
-        if args and args.get("h264") is True:
-            self.h264_encoder = H264Encoder(float(args["fps"]), int(args["width"]), int(args["height"]))
-
-        if args is None:  # TODO would be probably better to handle in ControlCommand
-            args = {}
-
-        # initialize the network application with desired parameters using the init command
-        control_cmd = ControlCommand(ControlCmdType.INIT, clear_queue=False, data=args)
-        self.send_control_command(control_cmd)
+        # Initialize the network application with desired parameters using the init command.
+        control_command = ControlCommand(ControlCmdType.INIT, clear_queue=False, data=args)
+        self.logger.info(f"Initialize the network application using the init command {control_command}")
+        initialized, message = self.send_control_command(control_command)
+        if not initialized:
+            raise FailedToInitialize(f"Failed to initialize the network application: {message}")
 
     def disconnect(self) -> None:
         """Disconnects the WebSocket connection."""
+
         self._sio.disconnect()
-        if self.stats:
+        if self._channels.stats:
+            # Print stats info - transferred bytes.
             self.logger.info(
-                f"Transferred bytes sum: {sum(self.sizes)} "
-                f"median: {statistics.median(self.sizes)} "
-                f"mean: {statistics.mean(self.sizes)} "
-                f"min: {min(self.sizes)} "
-                f"max: {max(self.sizes)} "
+                f"Transferred bytes sum: {sum(self._channels.sizes)} "
+                f"median: {statistics.median(self._channels.sizes)} "
+                f"mean: {statistics.mean(self._channels.sizes)} "
+                f"min: {min(self._channels.sizes)} "
+                f"max: {max(self._channels.sizes)} "
             )
 
     def wait(self) -> None:
         """Blocking infinite waiting."""
+
         self._sio.wait()
 
-    def on_connect_event(self) -> None:
-        """The callback called once the connection to the NetApp is made."""
-        self.logger.info("Connected to server")
+    def data_connect_callback(self) -> None:
+        """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is made."""
 
-    def on_connect_error(self, message: Optional[str] = None) -> None:
-        """The callback called on connection error."""
-        self.logger.error(f"Connection error: {message}")
+        self.logger.info(f"Connected to server {DATA_NAMESPACE}")
+
+    def control_connect_callback(self) -> None:
+        """The callback called once the connection to the 5G-ERA Network Application CONTROL_NAMESPACE is made."""
+
+        self.logger.info(f"Connected to server {CONTROL_NAMESPACE}")
+
+    def data_disconnect_callback(self) -> None:
+        """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is lost."""
+
+        self.logger.info(f"Disconnected from server {DATA_NAMESPACE}")
+
+    def control_disconnect_callback(self) -> None:
+        """The callback called once the connection to the 5G-ERA Network Application CONTROL_NAMESPACE is lost."""
+
+        self.logger.info(f"Disconnected from server {CONTROL_NAMESPACE}")
+
+    def data_connect_error_callback(self, message: Optional[str] = None) -> None:
+        """The callback called on connection DATA_NAMESPACE error.
+
+        Args:
+            message (str, optional): Error message.
+        """
+
+        self.logger.error(f"Connection {DATA_NAMESPACE} error: {message}")
         self.disconnect()
 
-    def send_image_ws(
-        self,
-        frame: np.ndarray,
-        timestamp: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        can_be_dropped=True,
-    ):
-        """Encodes the image frame to the jpg or h264 format and sends it over
-        the websocket, to the /data namespace.
+    def control_connect_error_callback(self, message: Optional[str] = None) -> None:
+        """The callback called on connection CONTROL_NAMESPACE error.
 
         Args:
-            frame (np.ndarray): Image frame
-            timestamp (Optional[int], optional): Frame timestamp
-            metadata (Optional[str], optional): Optional metadata
-            can_be_dropped: if data can be lost due to back pressure
+            message (str, optional): Error message.
         """
 
-        try:
-            if self.h264_encoder:
-                frame_encoded = self.h264_encoder.encode_ndarray(frame)
-            else:
-                _, frame_jpeg = cv2.imencode(".jpg", frame)
-                frame_encoded = frame_jpeg.tobytes()
-            if self.stats:
-                self.sizes.append(len(frame_encoded))
-                self.logger.debug(f"Frame data size: {self.sizes[-1]}")
-            data = {"timestamp": timestamp, "frame": frame_encoded}
-            if metadata:
-                data["metadata"] = metadata
-            # TODO for h264 the back pressure is disabled now - make it able to drop non-key frames
-            self.send_image_ws_raw(data, can_be_dropped and self.h264_encoder is None)
-        except H264EncoderError as e:
-            self.logger.error(f"H264 encoder error: {e}")
-            self.disconnect()
-            raise e
+        self.logger.error(f"Connection {CONTROL_NAMESPACE} error: {message}")
+        self.disconnect()
 
-    def _apply_back_pressure(self) -> None:
-        if self.back_pressure_size is not None and self._sio.eio.queue.qsize() > self.back_pressure_size:
-            raise BackPressureException()
-
-    def send_image_ws_raw(self, data: Dict[str, Any], can_be_dropped=True) -> None:
-        """Sends already encoded image data to /data namespace.
-
-        Args:
-            data (Dict): _description_
-            can_be_dropped: if data can be lost due to back pressure
-        """
-        if can_be_dropped:
-            self._apply_back_pressure()
-        self._sio.emit("image", data, "/data")
-
-    def send_json_ws(self, json: Dict[str, Any], can_be_dropped=True) -> None:
-        """Sends netapp-specific json data using the websockets.
-
-        Args:
-            json (dict): Json data in the form of Python dictionary
-            can_be_dropped: if data can be lost due to back pressure
-        """
-        if can_be_dropped:
-            self._apply_back_pressure()
-        self._sio.emit("json", json, "/data")
-
-    def send_control_command(self, control_command: ControlCommand) -> None:
+    def send_control_command(self, control_command: ControlCommand) -> Tuple[bool, str]:
         """Sends control command over the websocket.
 
         Args:
             control_command (ControlCommand): Control command to be sent.
+
+        Returns:
+            (success (bool), message (str)): If False, command failed.
         """
 
-        self._sio.call("command", asdict(control_command), "/control")
+        command_result: Tuple[bool, str] = self._sio.call(COMMAND_EVENT, asdict(control_command), CONTROL_NAMESPACE)
+        return command_result

@@ -3,14 +3,15 @@ import socket
 import time
 from contextlib import closing
 from threading import Thread
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import pytest
 import socketio
 from flask import Flask
 
 from era_5g_client.client_base import NetAppClientBase
-from era_5g_client.exceptions import BackPressureException
+from era_5g_interface.channels import COMMAND_EVENT, CONTROL_NAMESPACE, DATA_NAMESPACE, CallbackInfoClient, ChannelType
+from era_5g_interface.exceptions import BackPressureException
 
 
 def find_free_port():
@@ -25,14 +26,14 @@ got_data = False
 
 
 def test_client_send_data() -> None:
-    def json_callback_websocket(self, data: Dict[str, Any]):
+    def json_callback_websocket(sid: str, data: Dict[str, Any]) -> None:
         global got_data
         got_data = True
 
-    def control_callback_websocket(self, data: Dict[str, Any]):
-        pass
+    def control_callback_websocket(sid: str, data: Dict[str, Any]) -> Tuple[bool, str]:
+        return True, "OK"
 
-    def results_callback_websocket(self, data: Dict[str, Any]):
+    def connect_callback_websocket(sid: str, environ: Dict) -> None:
         pass
 
     def get_results(results: Dict[str, Any]) -> None:
@@ -40,9 +41,10 @@ def test_client_send_data() -> None:
 
     def thread_flask() -> None:
         sio = socketio.Server()
-        sio.on("json", json_callback_websocket, namespace="/data")
-        sio.on("command", control_callback_websocket, namespace="/control")
-        sio.on("connect", results_callback_websocket, namespace="/results")
+
+        sio.on("json", json_callback_websocket, namespace=DATA_NAMESPACE)
+        sio.on(COMMAND_EVENT, control_callback_websocket, namespace=CONTROL_NAMESPACE)
+        sio.on("connect", connect_callback_websocket, namespace=DATA_NAMESPACE)
 
         app = Flask(__name__)
         app.wsgi_app = socketio.WSGIApp(sio, app.wsgi_app)  # type: ignore
@@ -55,19 +57,23 @@ def test_client_send_data() -> None:
     t.start()
 
     with pytest.raises(ValueError, match="Invalid value for back_pressure_size."):
-        NetAppClientBase(get_results, back_pressure_size=0)
+        NetAppClientBase(
+            callbacks_info={"results": CallbackInfoClient(ChannelType.JSON, get_results)}, back_pressure_size=0
+        )
 
-    client = NetAppClientBase(get_results, back_pressure_size=2)
+    client = NetAppClientBase(
+        callbacks_info={"results": CallbackInfoClient(ChannelType.JSON, get_results)}, back_pressure_size=2
+    )
 
     client.register(f"http://localhost:{port}", wait_until_available=True, wait_timeout=5)
 
     with pytest.raises(BackPressureException):  # noqa:PT012
         for _ in range(100):
-            client.send_json_ws({"test": "test"})
+            client.send_data({"test": "test"}, "json")
 
     for _ in range(10):
         if got_data:
             break
         time.sleep(1)
     else:
-        raise Exception("NetApp didn't get json...")
+        raise Exception("5G-ERA Network Application didn't get json...")
