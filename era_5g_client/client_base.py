@@ -132,7 +132,7 @@ class NetAppClientBase:
         control_cmd = ControlCommand(ControlCmdType.SET_STATE, clear_queue=True, data=args)
         self.send_control_command(control_cmd)
 
-    def disconnect(self) -> None:
+    def disconnect(self, **kwargs) -> None:
         """Disconnects the WebSocket connection."""
         self._sio.disconnect()
 

@@ -123,6 +123,7 @@ class NetAppClient(NetAppClientBase):
             self.action_plan_id = self.gateway_get_plan(
                 task_id, resource_lock, robot_id
             )  # Get the plan_id by sending the token and task_id
+            print(self.action_plan_id)
             if not self.action_plan_id:
                 raise FailedToConnect("Failed to obtain action plan id...")
 
@@ -182,13 +183,15 @@ class NetAppClient(NetAppClientBase):
 
         super().register(netapp_address, args, wait_until_available, wait_timeout)
 
-    def disconnect(self) -> None:
+ 
+    def disconnect(self, delete_netapp=False) -> None:
         """Calls the /unregister endpoint of the server and disconnects the
         WebSocket connection."""
         super().disconnect()
         if self.resource_checker is not None:
             self.resource_checker.stop()
-        self.delete_all_resources()
+        if delete_netapp:
+            self.delete_all_resources()
 
     def wait_until_netapp_ready(self) -> None:
         """Blocking wait until the NetApp is running.
