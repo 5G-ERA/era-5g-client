@@ -1,8 +1,7 @@
 import logging
 import socket
-import time
 from contextlib import closing
-from threading import Thread
+from threading import Event, Thread
 from typing import Any, Dict, Tuple
 
 import pytest
@@ -22,13 +21,13 @@ def find_free_port():
 
 
 port = find_free_port()
-got_data = False
 
 
 def test_client_send_data() -> None:
+    got_data = Event()
+
     def json_callback_websocket(sid: str, data: Dict[str, Any]) -> None:
-        global got_data
-        got_data = True
+        got_data.set()
 
     def control_callback_websocket(sid: str, data: Dict[str, Any]) -> Tuple[bool, str]:
         return True, "OK"
@@ -71,9 +70,4 @@ def test_client_send_data() -> None:
         for _ in range(100):
             client.send_data({"test": "test"}, "json")
 
-    for _ in range(10):
-        if got_data:
-            break
-        time.sleep(1)
-    else:
-        raise Exception("5G-ERA Network Application didn't get json...")
+    assert got_data.wait(5), "5G-ERA Network Application didn't get json..."
