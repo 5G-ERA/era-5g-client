@@ -1,5 +1,5 @@
 [GLOBAL]
-pants_version = "2.16.0"
+pants_version = "2.18.0"
 backend_packages.add = [
   "pants.backend.build_files.fmt.black",
   "pants.backend.python",
@@ -13,6 +13,9 @@ backend_packages.add = [
 [anonymous-telemetry]
 enabled = true
 repo_id = "a888d69447a54a8892c9fe2cd1ea2ace"
+
+[generate-lockfiles]
+diff = true
 
 [source]
 # The Python source root is the repo root. See https://www.pantsbuild.org/docs/source-roots.
