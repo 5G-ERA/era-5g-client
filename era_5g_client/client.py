@@ -292,7 +292,7 @@ class NetAppClient(NetAppClientBase):
             None
 
         Raises:
-            FailedToConnect: Raised when could not delete the resource.
+            FailedToDeleteResource: Raised when could not delete the resource.
         """
 
         if self.token is None or self.action_plan_id is None:
@@ -308,7 +308,8 @@ class NetAppClient(NetAppClientBase):
 
                 if response.ok:
                     self.logger.debug("Resource deleted")
-
+                else:
+                    self.logger.warning(f"Resource deletion response: {response}")
         except HTTPError as e:
             if e.response:
                 self.logger.debug(e.response.status_code)

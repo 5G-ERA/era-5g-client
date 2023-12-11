@@ -67,7 +67,7 @@ class NetAppClientBase:
         """
 
         # Create Socket.IO Client.
-        self._sio = socketio.Client(logger=socketio_debug, reconnection_attempts=1, handle_sigint=False, json=ujson)
+        self._sio = socketio.Client(logger=socketio_debug, reconnection_attempts=3, handle_sigint=False, json=ujson)
 
         # Register connect, disconnect a connect error callbacks.
         self._sio.on("connect", self.data_connect_callback, namespace=DATA_NAMESPACE)
@@ -166,7 +166,8 @@ class NetAppClientBase:
     def disconnect(self) -> None:
         """Disconnects the WebSocket connection."""
 
-        self._sio.disconnect()
+        if self._sio.connected:
+            self._sio.disconnect()
         if self._channels.stats:
             # Print stats info - transferred bytes.
             self.logger.info(
@@ -196,11 +197,13 @@ class NetAppClientBase:
         """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is lost."""
 
         self.logger.info(f"Disconnected from server {DATA_NAMESPACE}")
+        self.disconnect()
 
     def control_disconnect_callback(self) -> None:
         """The callback called once the connection to the 5G-ERA Network Application CONTROL_NAMESPACE is lost."""
 
         self.logger.info(f"Disconnected from server {CONTROL_NAMESPACE}")
+        self.disconnect()
 
     def data_connect_error_callback(self, message: Optional[str] = None) -> None:
         """The callback called on connection DATA_NAMESPACE error.
@@ -210,7 +213,6 @@ class NetAppClientBase:
         """
 
         self.logger.error(f"Connection {DATA_NAMESPACE} error: {message}")
-        self.disconnect()
 
     def control_connect_error_callback(self, message: Optional[str] = None) -> None:
         """The callback called on connection CONTROL_NAMESPACE error.
@@ -220,7 +222,6 @@ class NetAppClientBase:
         """
 
         self.logger.error(f"Connection {CONTROL_NAMESPACE} error: {message}")
-        self.disconnect()
 
     def send_control_command(self, control_command: ControlCommand) -> Tuple[bool, str]:
         """Sends control command over the websocket.
@@ -232,5 +233,8 @@ class NetAppClientBase:
             (success (bool), message (str)): If False, command failed.
         """
 
-        command_result: Tuple[bool, str] = self._sio.call(COMMAND_EVENT, asdict(control_command), CONTROL_NAMESPACE)
-        return command_result
+        if self._sio.connected:
+            command_result: Tuple[bool, str] = self._sio.call(COMMAND_EVENT, asdict(control_command), CONTROL_NAMESPACE)
+            return command_result
+        else:
+            raise ConnectionError("Client is not connected to server.")
