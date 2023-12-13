@@ -39,6 +39,7 @@ class NetAppClient(NetAppClientBase):
         stats: bool = False,
         back_pressure_size: int = 5,
         recreate_h264_attempts_count: int = 5,
+        reconnection_attempts: int = 3,
     ) -> None:
         """Constructor.
 
@@ -54,6 +55,7 @@ class NetAppClient(NetAppClientBase):
             stats (bool): Store output data sizes.
             back_pressure_size (int): Back pressure size - max size of eio.queue.qsize().
             recreate_h264_attempts_count (int): How many times try to recreate the H.264 encoder/decoder.
+            reconnection_attempts (int): How many times to try to reconnect if the connection to the server is lost.
         """
 
         super().__init__(
@@ -65,6 +67,7 @@ class NetAppClient(NetAppClientBase):
             stats,
             back_pressure_size,
             recreate_h264_attempts_count,
+            reconnection_attempts,
         )
 
         self.host: Optional[str] = None
@@ -74,13 +77,13 @@ class NetAppClient(NetAppClientBase):
         self.token: Optional[str] = None
 
     def connect_to_middleware(self, middleware_info: MiddlewareInfo) -> None:
-        """Authenticates with the middleware and obtains a token for future calls.
+        """Authenticates with the Middleware and obtains a token for future calls.
 
         Args:
             middleware_info (MiddlewareInfo): Middleware info, i.e. dataclass with address, user's id and password.
 
         Raises:
-            FailedToConnect: Raised when the authentication with the middleware failed.
+            FailedToConnect: Raised when the authentication with the Middleware failed.
         """
 
         self.middleware_info = middleware_info
@@ -89,7 +92,7 @@ class NetAppClient(NetAppClientBase):
             # Connect to the middleware.
             self.token = self.gateway_login(self.middleware_info.user_id, self.middleware_info.password)
         except FailedToConnect as ex:
-            self.logger.error(f"Can't connect to middleware: {ex}")
+            self.logger.error(f"Can't connect to Middleware: {ex}")
             raise
 
     def run_task(
@@ -100,7 +103,7 @@ class NetAppClient(NetAppClientBase):
         mode: RunTaskMode = RunTaskMode.WAIT_AND_REGISTER,
         args: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Deploys the task with provided *task_id* using middleware and (optionally) waits until the 5G-ERA Network
+        """Deploys the task with provided *task_id* using Middleware and (optionally) waits until the 5G-ERA Network
         Application is ready and register with it.
 
         Args:
@@ -151,8 +154,8 @@ class NetAppClient(NetAppClientBase):
         wait_until_available: bool = False,
         wait_timeout: int = -1,
     ) -> None:
-        """Calls the /register endpoint of the 5G-ERA Network Application interface and if the registration is
-        successful, it sets up the WebSocket connection for results retrieval.
+        """Wait for ready Middleware resources and connects to the 5G-ERA Network Application server DATA_NAMESPACE and
+        CONTROL_NAMESPACE.
 
         Args:
             netapp_address (str): The URL of the network application interface, including the scheme and optionally
@@ -168,7 +171,7 @@ class NetAppClient(NetAppClientBase):
         """
 
         if not self.resource_checker:
-            raise NetAppNotReady("Not connected to the middleware.")
+            raise NetAppNotReady("Not connected to the Middleware.")
 
         if not self.resource_checker.is_ready():
             raise NetAppNotReady("Not ready.")
@@ -190,7 +193,7 @@ class NetAppClient(NetAppClientBase):
             FailedToConnect: Raised when resource_checker si None.
         """
         if not self.resource_checker:
-            raise FailedToConnect("Not connected to middleware.")
+            raise FailedToConnect("Not connected to Middleware.")
         self.resource_checker.wait_until_resource_ready()
 
     def load_netapp_address(self) -> None:
@@ -216,11 +219,11 @@ class NetAppClient(NetAppClientBase):
             Token.
 
         Raises:
-            FailedToConnect: Raised when could not log in to the middleware gateway.
+            FailedToConnect: Raised when could not log in to the Middleware gateway.
         """
 
         assert self.middleware_info
-        self.logger.debug("Trying to log into the middleware")
+        self.logger.debug("Trying to log into the Middleware")
         # Request Login.
         try:
             r = requests.post(
@@ -238,15 +241,15 @@ class NetAppClient(NetAppClientBase):
         except requests.HTTPError as e:
             if e.response:
                 raise FailedToConnect(
-                    f"Could not login to the middleware gateway, status code:" f" {e.response.status_code}"
+                    f"Could not login to the Middleware gateway, status code:" f" {e.response.status_code}"
                 )
             else:
-                raise FailedToConnect(f"Could not login to the middleware gateway, status code: {e}")
+                raise FailedToConnect(f"Could not login to the Middleware gateway, status code: {e}")
         except KeyError as e:
-            raise FailedToConnect(f"Could not login to the middleware gateway, the response does not contain {e}")
+            raise FailedToConnect(f"Could not login to the Middleware gateway, the response does not contain {e}")
 
     def gateway_get_plan(self, taskid: str, resource_lock: bool, robot_id: str) -> str:
-        """Get task action plan ID from middleware.
+        """Get task action plan ID from Middleware.
 
         Args:
             taskid (str): Task ID.

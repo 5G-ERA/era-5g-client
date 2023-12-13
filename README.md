@@ -91,6 +91,7 @@ How to send data? E.g.:
         client.send_image(frame, "image", ChannelType.H264, timestamp, encoding_options=h264_options)
         client.send_image(frame, "image", ChannelType.JPEG, timestamp, metadata)
         client.send_data({"message": "message text"}, "event_name")
+        client.send_data({"message": "message text"}, "event_name", ChannelType.JSON_LZ4)
 
 How to create `callbacks_info`? E.g.:
 

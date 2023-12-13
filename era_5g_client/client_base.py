@@ -30,6 +30,7 @@ class NetAppClientBase:
         client.send_image(frame, "image", ChannelType.H264, timestamp, encoding_options=h264_options)
         client.send_image(frame, "image", ChannelType.JPEG, timestamp, metadata)
         client.send_data({"message": "message text"}, "event_name")
+        client.send_data({"message": "message text"}, "event_name", ChannelType.JSON_LZ4)
     How to create callbacks_info? E.g.:
         {
             "results": CallbackInfoClient(ChannelType.JSON, results_callback),
@@ -49,6 +50,7 @@ class NetAppClientBase:
         stats: bool = False,
         back_pressure_size: Optional[int] = 5,
         recreate_h264_attempts_count: int = 5,
+        reconnection_attempts: int = 3,
     ) -> None:
         """Constructor.
 
@@ -64,16 +66,21 @@ class NetAppClientBase:
             stats (bool): Store output data sizes.
             back_pressure_size (int, optional): Back pressure size - max size of eio.queue.qsize().
             recreate_h264_attempts_count (int): How many times try to recreate the H.264 encoder/decoder.
+            reconnection_attempts (int): How many times to try to reconnect if the connection to the server is lost.
         """
 
         # Create Socket.IO Client.
-        self._sio = socketio.Client(logger=socketio_debug, reconnection_attempts=3, handle_sigint=False, json=ujson)
+        self._sio = socketio.Client(
+            logger=socketio_debug, reconnection_attempts=reconnection_attempts, handle_sigint=False, json=ujson
+        )
 
         # Register connect, disconnect a connect error callbacks.
         self._sio.on("connect", self.data_connect_callback, namespace=DATA_NAMESPACE)
         self._sio.on("connect", self.control_connect_callback, namespace=CONTROL_NAMESPACE)
         self._sio.on("disconnect", self.data_disconnect_callback, namespace=DATA_NAMESPACE)
         self._sio.on("disconnect", self.control_disconnect_callback, namespace=CONTROL_NAMESPACE)
+        self._sio.on("__disconnect_final", self.data_disconnect_final_callback, namespace=DATA_NAMESPACE)
+        self._sio.on("__disconnect_final", self.control_disconnect_final_callback, namespace=CONTROL_NAMESPACE)
         self._sio.on("connect_error", self.data_connect_error_callback, namespace=DATA_NAMESPACE)
         self._sio.on("connect_error", self.control_connect_error_callback, namespace=CONTROL_NAMESPACE)
 
@@ -106,6 +113,9 @@ class NetAppClientBase:
         self.send_image = self._channels.send_image
         self.send_data = self._channels.send_data
 
+        # Args for registration.
+        self._args: Optional[Dict[str, Any]] = None
+
     def register(
         self,
         netapp_address: str,
@@ -113,8 +123,7 @@ class NetAppClientBase:
         wait_until_available: bool = False,
         wait_timeout: int = -1,
     ) -> None:
-        """Calls the /register endpoint of the 5G-ERA Network Application server and if the registration is successful,
-        it sets up the WebSocket connection for results retrieval.
+        """Connects to the 5G-ERA Network Application server DATA_NAMESPACE and CONTROL_NAMESPACE.
 
         Args:
             netapp_address (str): The URL of the 5G-ERA Network Application server, including the scheme and optionally
@@ -134,13 +143,15 @@ class NetAppClientBase:
             Response: response from the 5G-ERA Network Application.
         """
 
+        # Store args for repeat registration.
+        self._args = args
         # Connect to server
         self.netapp_address = netapp_address
         namespaces_to_connect = [DATA_NAMESPACE, CONTROL_NAMESPACE]
         start_time = time.time()
         while True:
             try:
-                self.logger.debug("Trying to connect to the network application")
+                self.logger.info(f"Trying to connect to the network application: {netapp_address}")
                 self._sio.connect(
                     netapp_address,
                     namespaces=namespaces_to_connect,
@@ -155,13 +166,6 @@ class NetAppClientBase:
                 time.sleep(1)
 
         self.logger.info(f"Client connected to namespaces: {namespaces_to_connect}")
-
-        # Initialize the network application with desired parameters using the init command.
-        control_command = ControlCommand(ControlCmdType.INIT, clear_queue=False, data=args)
-        self.logger.info(f"Initialize the network application using the init command {control_command}")
-        initialized, message = self.send_control_command(control_command)
-        if not initialized:
-            raise FailedToInitialize(f"Failed to initialize the network application: {message}")
 
     def disconnect(self) -> None:
         """Disconnects the WebSocket connection."""
@@ -186,23 +190,59 @@ class NetAppClientBase:
     def data_connect_callback(self) -> None:
         """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is made."""
 
-        self.logger.info(f"Connected to server {DATA_NAMESPACE}")
+        self.logger.info(
+            f"Connected to server {DATA_NAMESPACE}, eio_sid" f" {self._channels.get_client_eio_sid(DATA_NAMESPACE)}"
+        )
 
     def control_connect_callback(self) -> None:
         """The callback called once the connection to the 5G-ERA Network Application CONTROL_NAMESPACE is made."""
 
-        self.logger.info(f"Connected to server {CONTROL_NAMESPACE}")
+        self.logger.info(
+            f"Connected to server {CONTROL_NAMESPACE}, eio_sid "
+            f"{self._channels.get_client_eio_sid(CONTROL_NAMESPACE)}"
+        )
+
+        # Initialize the network application with desired parameters using the init command.
+        control_command = ControlCommand(ControlCmdType.INIT, clear_queue=False, data=self._args)
+        self.logger.info(f"Initialize the network application using the init command {control_command}")
+        initialized, message = self.send_control_command(control_command)
+        if not initialized:
+            raise FailedToInitialize(f"Failed to initialize the network application: {message}")
 
     def data_disconnect_callback(self) -> None:
         """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is lost."""
 
-        self.logger.info(f"Disconnected from server {DATA_NAMESPACE}")
+        self.logger.info(
+            f"Disconnected from server {DATA_NAMESPACE}, eio_sid "
+            f"{self._channels.get_client_eio_sid(DATA_NAMESPACE)}"
+        )
+        self.disconnect()
+
+    def data_disconnect_final_callback(self) -> None:
+        """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is lost."""
+
+        self.logger.info(
+            f"Finally disconnected from server {DATA_NAMESPACE}, eio_sid "
+            f"{self._channels.get_client_eio_sid(DATA_NAMESPACE)}"
+        )
         self.disconnect()
 
     def control_disconnect_callback(self) -> None:
         """The callback called once the connection to the 5G-ERA Network Application CONTROL_NAMESPACE is lost."""
 
-        self.logger.info(f"Disconnected from server {CONTROL_NAMESPACE}")
+        self.logger.info(
+            f"Disconnected from server {CONTROL_NAMESPACE}, eio_sid "
+            f"{self._channels.get_client_eio_sid(CONTROL_NAMESPACE)}"
+        )
+        self.disconnect()
+
+    def control_disconnect_final_callback(self) -> None:
+        """The callback called once the connection to the 5G-ERA Network Application CONTROL_NAMESPACE is lost."""
+
+        self.logger.info(
+            f"Finally disconnected from server {CONTROL_NAMESPACE}, eio_sid "
+            f"{self._channels.get_client_eio_sid(CONTROL_NAMESPACE)}"
+        )
         self.disconnect()
 
     def data_connect_error_callback(self, message: Optional[str] = None) -> None:
@@ -212,7 +252,10 @@ class NetAppClientBase:
             message (str, optional): Error message.
         """
 
-        self.logger.error(f"Connection {DATA_NAMESPACE} error: {message}")
+        self.logger.error(
+            f"Connection {DATA_NAMESPACE} error: {message}, eio_sid "
+            f"{self._channels.get_client_eio_sid(DATA_NAMESPACE)}"
+        )
 
     def control_connect_error_callback(self, message: Optional[str] = None) -> None:
         """The callback called on connection CONTROL_NAMESPACE error.
@@ -221,7 +264,10 @@ class NetAppClientBase:
             message (str, optional): Error message.
         """
 
-        self.logger.error(f"Connection {CONTROL_NAMESPACE} error: {message}")
+        self.logger.error(
+            f"Connection {CONTROL_NAMESPACE} error: {message}, eio_sid "
+            f"{self._channels.get_client_eio_sid(CONTROL_NAMESPACE)}"
+        )
 
     def send_control_command(self, control_command: ControlCommand) -> Tuple[bool, str]:
         """Sends control command over the websocket.
@@ -233,7 +279,7 @@ class NetAppClientBase:
             (success (bool), message (str)): If False, command failed.
         """
 
-        if self._sio.connected:
+        if self._sio.eio.state == "connected":
             command_result: Tuple[bool, str] = self._sio.call(COMMAND_EVENT, asdict(control_command), CONTROL_NAMESPACE)
             return command_result
         else:
