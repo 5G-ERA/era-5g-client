@@ -68,6 +68,6 @@ def test_client_send_data() -> None:
 
     with pytest.raises(BackPressureException):  # noqa:PT012
         for _ in range(100):
-            client.send_data({"test": "test"}, "json")
+            client.send_data({"test": "test"}, "json", can_be_dropped=True)
 
     assert got_data.wait(5), "5G-ERA Network Application didn't get json..."
