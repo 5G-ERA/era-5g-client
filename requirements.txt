@@ -1,4 +1,4 @@
-era-5g-interface~=0.8.0
+era-5g-interface~=0.9.0
 flask>=3.0.0
 numpy>=1.24.4
 opencv-python>=4.7

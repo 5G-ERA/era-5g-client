@@ -38,7 +38,7 @@ class NetAppClient(NetAppClientBase):
         socketio_debug: bool = False,
         stats: bool = False,
         back_pressure_size: int = 5,
-        recreate_h264_attempts_count: int = 5,
+        recreate_coder_attempts_count: int = 5,
         reconnection_attempts: int = 3,
         disconnect_on_unhandled: bool = True,
     ) -> None:
@@ -55,7 +55,7 @@ class NetAppClient(NetAppClientBase):
             socketio_debug (bool): Socket.IO debug flag.
             stats (bool): Store output data sizes.
             back_pressure_size (int): Back pressure size - max size of eio.queue.qsize().
-            recreate_h264_attempts_count (int): How many times try to recreate the H.264 encoder/decoder.
+            recreate_coder_attempts_count (int): How many times try to recreate the frame encoder/decoder.
             reconnection_attempts (int): How many times to try to reconnect if the connection to the server is lost.
             disconnect_on_unhandled (bool): Whether to call self.disconnect() if unhandled exception occurs.
         """
@@ -68,7 +68,7 @@ class NetAppClient(NetAppClientBase):
             socketio_debug,
             stats,
             back_pressure_size,
-            recreate_h264_attempts_count,
+            recreate_coder_attempts_count,
             reconnection_attempts,
             disconnect_on_unhandled,
         )
