@@ -7,7 +7,7 @@ from requests import HTTPError
 
 from era_5g_client.client_base import NetAppClientBase
 from era_5g_client.dataclasses import MiddlewareInfo
-from era_5g_client.exceptions import FailedToConnect, FailedToDeleteResource, FailedToObtainPlan, NetAppNotReady
+from era_5g_client.exceptions import FailedToConnect, FailedToDeleteResource, NetAppNotReady
 from era_5g_client.middleware_resource_checker import MiddlewareResourceChecker
 from era_5g_interface.channels import CallbackInfoClient
 
@@ -118,7 +118,6 @@ class NetAppClient(NetAppClientBase):
                 is True. Defaults to None.
 
         Raises:
-            FailedToObtainPlan: Raised when could not get the plan.
             FailedToConnect: Raised when running the task failed.
         """
 
@@ -128,7 +127,7 @@ class NetAppClient(NetAppClientBase):
                 task_id, resource_lock, robot_id
             )  # Get the plan_id by sending the token and task_id.
             if not self.action_plan_id:
-                raise FailedToObtainPlan("Failed to obtain action plan id...")
+                raise FailedToConnect("Failed to obtain action plan id...")
 
             self.resource_checker = MiddlewareResourceChecker(
                 str(self.token),
@@ -267,29 +266,28 @@ class NetAppClient(NetAppClientBase):
 
         assert self.middleware_info
         # Request plan.
+        self.logger.debug("Goal task is: " + str(taskid))
+        hed = {"Authorization": f"Bearer {str(self.token)}"}
+        data = {
+            "TaskId": str(taskid),
+            "DisableResourceReuse": resource_lock,
+            "RobotId": robot_id,
+        }
+        r = requests.post(self.middleware_info.build_api_endpoint("Task/Plan"), json=data, headers=hed)
+        response = r.json()
+
+        if not isinstance(response, dict):
+            raise FailedToConnect("Invalid response.")
+
+        if "statusCode" in response and (response["statusCode"] == 500 or response["statusCode"] == 400):
+            raise FailedToConnect(f"response {response['statusCode']}: {response['message']}")
+
         try:
-            self.logger.debug("Goal task is: " + str(taskid))
-            hed = {"Authorization": f"Bearer {str(self.token)}"}
-            data = {
-                "TaskId": str(taskid),
-                "LockResourceReUse": resource_lock,
-                "RobotId": robot_id,
-            }
-            r = requests.post(self.middleware_info.build_api_endpoint("Task/Plan"), json=data, headers=hed)
-            response = r.json()
-
-            if not isinstance(response, Dict):
-                raise FailedToConnect("Invalid response.")
-
-            if "statusCode" in response and (response["statusCode"] == 500 or response["statusCode"] == 400):
-                raise FailedToConnect(f"response {response['statusCode']}: {response['message']}")
-            # TODO: if "errors" in response:
-            #           raise FailedToConnect(str(response["errors"]))
-            action_plan_id = str(response["ActionPlanId"])
+            action_plan_id = str(response["task"]["ActionPlanId"])
             self.logger.debug("ActionPlanId ** is: " + str(action_plan_id))
             return action_plan_id
         except KeyError as e:
-            raise FailedToObtainPlan(f"Could not get the plan: {e}")
+            raise FailedToConnect(f"Could not get the plan: {e}")
 
     def delete_all_resources(self) -> None:
         """Delete all resources.

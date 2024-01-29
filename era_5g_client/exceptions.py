@@ -16,12 +16,6 @@ class FailedToInitialize(Era5gClientException):
     pass
 
 
-class FailedToObtainPlan(Era5gClientException):
-    """Exception which is raised when the client could not get the plan from the Middleware."""
-
-    pass
-
-
 class FailedToDeleteResource(Era5gClientException):
     """Exception which is raised when the client could not when could not delete Middleware resource."""
 
