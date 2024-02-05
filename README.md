@@ -10,7 +10,7 @@ A client application for 5G-ERA Network Applications. Contains the basic impleme
   various transport options.
 - [Reference-NetApp](https://github.com/5G-ERA/Reference-NetApp) - reference 5G-ERA Network Application implementation
   with MMCV detector.
-- 
+
 ## Installation
 
 The package could be installed via pip:
