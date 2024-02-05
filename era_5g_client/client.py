@@ -283,7 +283,7 @@ class NetAppClient(NetAppClientBase):
             raise FailedToConnect(f"response {response['statusCode']}: {response['message']}")
 
         try:
-            action_plan_id = str(response["task"]["ActionPlanId"])
+            action_plan_id = str(response["ActionPlanId"])
             self.logger.debug("ActionPlanId ** is: " + str(action_plan_id))
             return action_plan_id
         except KeyError as e:
