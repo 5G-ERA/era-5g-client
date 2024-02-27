@@ -1,11 +1,11 @@
-era-5g-interface~=0.9.0
-flask>=3.0.0
+era-5g-interface~=0.10.0
+flask>=3.0.2
 numpy>=1.24.4
 opencv-python>=4.7
-python-socketio[client]>=5.10.0
+python-socketio[client]>=5.11.1
 requests>=2.31.0
 ujson>=5.8.0
-pytest>=7.4.3
+pytest>=8.0.2
 
 # these could go to mypy.txt but it does not work for some reason
 types-requests>=2.31.0.10

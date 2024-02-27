@@ -1,4 +1,5 @@
 import logging
+import os
 import statistics
 import time
 from collections.abc import Callable
@@ -9,7 +10,7 @@ import socketio
 import ujson
 from socketio.exceptions import ConnectionError
 
-from era_5g_client.exceptions import FailedToConnect, FailedToInitialize
+from era_5g_client.exceptions import FailedToConnect
 from era_5g_interface.channels import (
     COMMAND_ERROR_EVENT,
     COMMAND_EVENT,
@@ -48,6 +49,7 @@ class NetAppClientBase:
         logging_level: int = logging.INFO,
         socketio_debug: bool = False,
         stats: bool = False,
+        extended_measuring: bool = False,
         back_pressure_size: Optional[int] = 5,
         recreate_coder_attempts_count: int = 5,
         reconnection_attempts: int = 3,
@@ -65,6 +67,7 @@ class NetAppClientBase:
             logging_level (int): Logging level.
             socketio_debug (bool): Socket.IO debug flag.
             stats (bool): Store output data sizes.
+            extended_measuring (bool): Enable logging of measuring.
             back_pressure_size (int, optional): Back pressure size - max size of eio.queue.qsize().
             recreate_coder_attempts_count (int): How many times try to recreate the frame encoder/decoder.
             reconnection_attempts (int): How many times to try to reconnect if the connection to the server is lost.
@@ -99,6 +102,7 @@ class NetAppClientBase:
             back_pressure_size=back_pressure_size,
             recreate_coder_attempts_count=recreate_coder_attempts_count,
             stats=stats,
+            extended_measuring=extended_measuring,
         )
 
         # Save custom command callbacks.
@@ -140,7 +144,6 @@ class NetAppClientBase:
 
         Raises:
             FailedToConnect: Failed to connect to network application exception.
-            FailedToInitialize: Failed to initialize the network application.
 
         Returns:
             Response: response from the 5G-ERA Network Application.
@@ -214,7 +217,11 @@ class NetAppClientBase:
         self.logger.info(f"Initialize the network application using the init command {control_command}")
         initialized, message = self.send_control_command(control_command)
         if not initialized:
-            raise FailedToInitialize(f"Failed to initialize the network application: {message}")
+            self.disconnect()
+            self.logger.error(f"Failed to initialize the network application: {message}")
+            logging.shutdown()  # should flush the logger
+            os._exit(1)
+            # raise FailedToInitialize(f"Failed to initialize the network application: {message}")
 
     def data_disconnect_callback(self) -> None:
         """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is lost."""

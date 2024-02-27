@@ -37,6 +37,7 @@ class NetAppClient(NetAppClientBase):
         logging_level: int = logging.INFO,
         socketio_debug: bool = False,
         stats: bool = False,
+        extended_measuring: bool = False,
         back_pressure_size: int = 5,
         recreate_coder_attempts_count: int = 5,
         reconnection_attempts: int = 3,
@@ -54,6 +55,7 @@ class NetAppClient(NetAppClientBase):
             logging_level (int): Logging level.
             socketio_debug (bool): Socket.IO debug flag.
             stats (bool): Store output data sizes.
+            extended_measuring (bool): Enable logging of measuring.
             back_pressure_size (int): Back pressure size - max size of eio.queue.qsize().
             recreate_coder_attempts_count (int): How many times try to recreate the frame encoder/decoder.
             reconnection_attempts (int): How many times to try to reconnect if the connection to the server is lost.
@@ -61,16 +63,17 @@ class NetAppClient(NetAppClientBase):
         """
 
         super().__init__(
-            callbacks_info,
-            command_result_callback,
-            command_error_callback,
-            logging_level,
-            socketio_debug,
-            stats,
-            back_pressure_size,
-            recreate_coder_attempts_count,
-            reconnection_attempts,
-            disconnect_on_unhandled,
+            callbacks_info=callbacks_info,
+            command_result_callback=command_result_callback,
+            command_error_callback=command_error_callback,
+            logging_level=logging_level,
+            socketio_debug=socketio_debug,
+            stats=stats,
+            extended_measuring=extended_measuring,
+            back_pressure_size=back_pressure_size,
+            recreate_coder_attempts_count=recreate_coder_attempts_count,
+            reconnection_attempts=reconnection_attempts,
+            disconnect_on_unhandled=disconnect_on_unhandled,
         )
 
         self.host: Optional[str] = None
@@ -312,8 +315,9 @@ class NetAppClient(NetAppClientBase):
 
                 if response.ok:
                     self.logger.debug("Resource deleted")
+                    self.action_plan_id = None
                 else:
-                    self.logger.warning(f"Resource deletion response: {response}")
+                    self.logger.warning(f"Resource deletion response: {response}, {response.text}")
         except HTTPError as e:
             if e.response:
                 self.logger.debug(e.response.status_code)
