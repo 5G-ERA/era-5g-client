@@ -15,7 +15,12 @@ class MiddlewareResourceChecker(Thread):
     """Class for checking Middleware resources."""
 
     def __init__(
-        self, token: str, action_plan_id: str, status_endpoint: str, state_callback: Optional[Callable] = None, **kw
+        self,
+        token: str,
+        action_plan_id: str,
+        status_endpoint: str,
+        url_changed_callback: Optional[Callable] = None,
+        **kw,
     ) -> None:
         """Constructor.
 
@@ -23,7 +28,7 @@ class MiddlewareResourceChecker(Thread):
             token (str): Login token.
             action_plan_id (str): Action plan ID.
             status_endpoint (str): Status endpoint.
-            state_callback (Callable, optional): Optional state callback.
+            url_changed_callback (Callable, optional): Triggered if the received URL has changed.
             **kw: Thread arguments.
         """
 
@@ -32,7 +37,7 @@ class MiddlewareResourceChecker(Thread):
         self.token = token
         self.action_plan_id = action_plan_id
         self.resource_state: Optional[Dict] = None
-        self.state_callback = state_callback
+        self.url_changed_callback = url_changed_callback
         self.status_endpoint = status_endpoint
         self.status: Optional[str] = None  # TODO define as enum?
         self.url: Optional[str] = None
@@ -50,7 +55,6 @@ class MiddlewareResourceChecker(Thread):
 
         while not self.stop_event.is_set():
             resource_state = self.get_resource_status()
-
             seq = resource_state.get("actionSequence", [])
             if seq:
                 services = seq[0].get("Services", [])
@@ -58,10 +62,11 @@ class MiddlewareResourceChecker(Thread):
                     self.resource_state = services[0]
                     assert isinstance(self.resource_state, dict)
                     self.status = self.resource_state.get("serviceStatus", None)
+                    old_url = self.url
                     self.url = self.resource_state.get("serviceUrl", None)
+                    if old_url and self.url_changed_callback and old_url != self.url:
+                        self.url_changed_callback()
                     logger.debug(f"{self.status=}, {self.url=}")
-            if self.state_callback:
-                self.state_callback(self.resource_state)
             time.sleep(0.5)  # TODO: adjust or use something similar to rospy.rate.sleep()
 
     def get_resource_status(self) -> Dict:
@@ -82,7 +87,6 @@ class MiddlewareResourceChecker(Thread):
             else:
                 logger.debug(e)
             raise FailedToConnect(f"Could not get the resource status, revisit the log files for more details. {e}")
-
         resp = response.json()
         if isinstance(resp, dict):
             return resp

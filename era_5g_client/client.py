@@ -81,6 +81,8 @@ class NetAppClient(NetAppClientBase):
         self.resource_checker: Optional[MiddlewareResourceChecker] = None
         self.middleware_info: Optional[MiddlewareInfo] = None
         self.token: Optional[str] = None
+        self.args: Optional[Dict[str, Any]] = None
+        self._switching: bool = False
 
     def connect_to_middleware(self, middleware_info: MiddlewareInfo) -> None:
         """Authenticates with the Middleware and obtains a token for future calls.
@@ -136,6 +138,7 @@ class NetAppClient(NetAppClientBase):
                 str(self.token),
                 self.action_plan_id,
                 self.middleware_info.build_api_endpoint("orchestrate/orchestrate/plan"),
+                self.netapp_address_changed,
                 daemon=True,
             )
 
@@ -180,16 +183,31 @@ class NetAppClient(NetAppClientBase):
 
         if not self.resource_checker.is_ready():
             raise NetAppNotReady("Not ready.")
-
+        self.args = args
         super().register(netapp_address, args, wait_until_available, wait_timeout)
+
+    @property
+    def switching(self) -> bool:
+        """Specify if the client is in the process of the edge switchover (reconnecting from one server to another)."""
+        return self._switching
+
+    def netapp_address_changed(self):
+        """Invoked when the resource checker detects a change in the address of the network application."""
+        self._switching = True
+        self.resource_checker.wait_until_resource_ready()
+        self.load_netapp_address()
+        self.disconnect()
+        self.register(self.netapp_address, self.args, True)
+        self._switching = False
 
     def disconnect(self) -> None:
         """Disconnects the WebSocket connection, stop resource checker and delete resources."""
 
         super().disconnect()
-        if self.resource_checker is not None:
-            self.resource_checker.stop()
-        self.delete_all_resources()
+        if not self._switching:
+            if self.resource_checker is not None:
+                self.resource_checker.stop()
+            self.delete_all_resources()
 
     def wait_until_netapp_ready(self) -> None:
         """Blocking wait until the 5G-ERA Network Application is running.
