@@ -161,6 +161,7 @@ class NetAppClient(NetAppClientBase):
         args: Optional[Dict[str, Any]] = None,
         wait_until_available: bool = False,
         wait_timeout: int = -1,
+        wait_until_initialized: bool = True,
     ) -> None:
         """Wait for ready Middleware resources and connects to the 5G-ERA Network Application server DATA_NAMESPACE and
         CONTROL_NAMESPACE.
@@ -173,6 +174,8 @@ class NetAppClient(NetAppClientBase):
                 until it is available. Defaults to False.
             wait_timeout: How long the client will try to connect to network application. Only used if
                 wait_until_available is True. If negative, the client will wait indefinitely. Defaults to -1.
+            wait_until_initialized (bool): If True, the client will repeatedly wait for the Network Application
+                initialization. Defaults to True.
 
         Raises:
             NetAppNotReady: Raised when register called before the 5G-ERA Network Application is ready.
@@ -184,7 +187,7 @@ class NetAppClient(NetAppClientBase):
         if not self.resource_checker.is_ready():
             raise NetAppNotReady("Not ready.")
         self.args = args
-        super().register(netapp_address, args, wait_until_available, wait_timeout)
+        super().register(netapp_address, args, wait_until_available, wait_timeout, wait_until_initialized)
 
     @property
     def switching(self) -> bool:

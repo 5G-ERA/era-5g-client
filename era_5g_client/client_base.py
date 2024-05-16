@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import socketio
 import ujson
+from requests import JSONDecodeError
 from socketio.exceptions import ConnectionError
 
 from era_5g_client.exceptions import FailedToConnect
@@ -123,12 +124,15 @@ class NetAppClientBase:
         # Args for registration.
         self._args: Optional[Dict[str, Any]] = None
 
+        self._initialized = False  # Initialization flag.
+
     def register(
         self,
         netapp_address: str,
         args: Optional[Dict[str, Any]] = None,
         wait_until_available: bool = False,
         wait_timeout: int = -1,
+        wait_until_initialized: bool = True,
     ) -> None:
         """Connects to the 5G-ERA Network Application server DATA_NAMESPACE and CONTROL_NAMESPACE.
 
@@ -137,13 +141,15 @@ class NetAppClientBase:
                 port and path to the interface, e.g. http://localhost:80 or http://gateway/path_to_interface.
             args (Dict, optional): Optional parameters to be passed to the 5G-ERA Network Application, in the form of
                 dict. Defaults to None.
-            wait_until_available: If True, the client will repeatedly try to register with the Network Application
+            wait_until_available (bool): If True, the client will repeatedly try to register with the Network Application
                 until it is available. Defaults to False.
-            wait_timeout: How long the client will try to connect to network application. Only used if
+            wait_timeout (int): How long the client will try to connect to Network Application. Only used if
                 wait_until_available is True. If negative, the client will wait indefinitely. Defaults to -1.
+            wait_until_initialized (bool): If True, the client will repeatedly wait for the Network Application
+                initialization. Defaults to True.
 
         Raises:
-            FailedToConnect: Failed to connect to network application exception.
+            FailedToConnect: Failed to connect to Network Application exception.
 
         Returns:
             Response: response from the 5G-ERA Network Application.
@@ -157,25 +163,31 @@ class NetAppClientBase:
         start_time = time.time()
         while True:
             try:
-                self.logger.info(f"Trying to connect to the network application: {netapp_address}")
+                self.logger.info(f"Trying to connect to the Network Application: {netapp_address}")
                 self._sio.connect(
                     netapp_address,
                     namespaces=namespaces_to_connect,
                     wait_timeout=10,
                 )
                 break
-            except ConnectionError as ex:
+            except (ConnectionError, JSONDecodeError) as ex:
                 self.logger.debug(f"Failed to connect: {repr(ex)}")
                 if not wait_until_available or (wait_timeout > 0 and start_time + wait_timeout < time.time()):
                     raise FailedToConnect(ex)
-                self.logger.warning("Failed to connect to network application. Retrying in 1 second.")
+                self.logger.warning("Failed to connect to Network Application. Retrying in 1 second.")
                 time.sleep(1)
 
         self.logger.info(f"Client connected to namespaces: {namespaces_to_connect}")
 
+        if wait_until_initialized:
+            while not self._initialized:
+                self.logger.warning("Waiting for successful initialization by INIT command. Retrying in 1 second.")
+                time.sleep(1)
+
     def disconnect(self) -> None:
         """Disconnects the WebSocket connection."""
 
+        self._initialized = False
         if self._sio.connected:
             self._sio.disconnect()
 
@@ -197,6 +209,15 @@ class NetAppClientBase:
 
         self._sio.wait()
 
+    @property
+    def initialized(self) -> bool:
+        """Is the Network Application initialized by ControlCmdType.INIT?
+
+        Returns: True if Network Application was initialized, False otherwise.
+        """
+
+        return self._initialized
+
     def data_connect_callback(self) -> None:
         """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is made."""
 
@@ -212,16 +233,17 @@ class NetAppClientBase:
             f"{self._channels.get_client_eio_sid(CONTROL_NAMESPACE)}"
         )
 
-        # Initialize the network application with desired parameters using the init command.
+        self._initialized = False
+        # Initialize the Network Application with desired parameters using the init command.
         control_command = ControlCommand(ControlCmdType.INIT, clear_queue=False, data=self._args)
-        self.logger.info(f"Initialize the network application using the init command {control_command}")
+        self.logger.info(f"Initialize the Network Application using the INIT command {control_command}")
         initialized, message = self.send_control_command(control_command)
         if not initialized:
             self.disconnect()
-            self.logger.error(f"Failed to initialize the network application: {message}")
+            self.logger.error(f"Failed to initialize the Network Application: {message}")
             logging.shutdown()  # should flush the logger
             os._exit(1)
-            # raise FailedToInitialize(f"Failed to initialize the network application: {message}")
+        self._initialized = True
 
     def data_disconnect_callback(self) -> None:
         """The callback called once the connection to the 5G-ERA Network Application DATA_NAMESPACE is lost."""
